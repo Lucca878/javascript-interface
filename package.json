@@ -1,0 +1,24 @@
+{
+  "name": "javascript-interface",
+  "version": "1.0.0",
+  "description": "Frontend interface for a human paraphrasing task in paraphrasing attacks on automated deception classifiers study.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lucca878/javascript-interface.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Lucca878/javascript-interface/issues"
+  },
+  "homepage": "https://github.com/Lucca878/javascript-interface#readme",
+  "devDependencies": {
+    "jasmine-core": "^6.1.0"
+  }
+}

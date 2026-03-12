@@ -1,1 +1,120 @@
-/* Styles will go here */
+:root {
+  --bg: #f4f7fb;
+  --card: #ffffff;
+  --text: #1b2330;
+  --muted: #5e6b78;
+  --line: #d9e2ec;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --radius: 18px;
+  --shadow: 0 12px 30px rgba(17, 24, 39, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  min-height: 100vh;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 760px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 40px 32px;
+}
+
+.title {
+  margin: 0 0 16px;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.lead {
+  margin: 0 0 14px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 1.05rem;
+}
+
+.info-box {
+  margin-top: 24px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f9fbff;
+}
+
+.info-label {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.info-value {
+  font-weight: bold;
+  word-break: break-word;
+}
+
+.actions {
+  margin-top: 28px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.button {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  background: var(--primary);
+  color: white;
+  transition: background 0.2s ease;
+}
+
+.button:hover {
+  background: var(--primary-hover);
+}
+
+.note {
+  margin-top: 18px;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.message {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #eef4ff;
+  border: 1px solid #cfe0ff;
+  color: #1d4ed8;
+  display: none;
+}
+
+.message.show {
+  display: block;
+}

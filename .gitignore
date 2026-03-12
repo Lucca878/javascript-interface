@@ -8,5 +8,8 @@ Thumbs.db
 # Keep shared settings if wanted
 !.vscode/settings.json
 
+# Dependencies
+node_modules/
+
 # Logs
 *.log

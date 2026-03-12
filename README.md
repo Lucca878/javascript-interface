@@ -11,3 +11,8 @@ Frontend interface for a human paraphrasing task in paraphrasing attacks on auto
 ## Notes
 
 Backend endpoints will be added later as placeholders first.
+
+## GitHub Commit Commands 
+git add .
+git commit -m "Describe change"
+git push
