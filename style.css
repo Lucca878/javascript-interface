@@ -118,3 +118,42 @@ body {
 .message.show {
   display: block;
 }
+
+.consent-list {
+  margin: 16px 0 0 20px;
+  padding: 0;
+  color: var(--text);
+  line-height: 1.7;
+}
+
+.consent-list li {
+  margin-bottom: 10px;
+}
+
+.consent-intro {
+  margin-bottom: 12px;
+}
+
+.consent-actions {
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.button-secondary {
+  background: #e5e7eb;
+  color: var(--text);
+}
+
+.button-secondary:hover {
+  background: #d1d5db;
+}
+
+.button-danger {
+  background: #dc2626;
+  color: white;
+}
+
+.button-danger:hover {
+  background: #b91c1c;
+}
