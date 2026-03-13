@@ -32,34 +32,65 @@ window.app = {
     storage.setParticipantId(state.participantId);
   },
 
+  pushHistoryState(screenName) {
+    window.history.pushState({ screen: screenName }, "", window.location.href);
+  },
+
+  replaceHistoryState(screenName) {
+    window.history.replaceState({ screen: screenName }, "", window.location.href);
+  },
+
+  handlePopState() {
+    const currentScreen = storage.getCurrentScreen() || "welcome";
+    this.replaceHistoryState(currentScreen);
+    this.restoreScreen();
+  },
+
+  setupHistoryGuard() {
+    this.replaceHistoryState(storage.getCurrentScreen() || "welcome");
+
+    window.addEventListener("popstate", () => {
+      this.handlePopState();
+    });
+  },
+
   showWelcomePage() {
     storage.setCurrentScreen("welcome");
+    this.pushHistoryState("welcome");
     renderWelcomePage(this);
   },
 
   showConsentPage() {
     storage.setCurrentScreen("consent");
+    this.pushHistoryState("consent");
     renderConsentPage(this);
+  },
+
+  showInstructionsPage() {
+    storage.setCurrentScreen("instructions");
+    this.pushHistoryState("instructions");
+    renderInstructionsPage(this);
   },
 
   restoreScreen() {
     const storedScreen = storage.getCurrentScreen();
 
-    if (storedScreen === "consent") {
-      this.showConsentPage();
+    if (storedScreen === "instructions") {
+      renderInstructionsPage(this);
       return;
     }
 
-    this.showWelcomePage();
+    if (storedScreen === "consent") {
+      renderConsentPage(this);
+      return;
+    }
+
+    renderWelcomePage(this);
   },
 
   handleConsentAccept() {
     state.consentData = "Accepted";
-
-    const messageBox = document.getElementById("messageBox");
-    messageBox.textContent =
-      "Consent accepted. Next step placeholder: this will later open the instructions page.";
-    messageBox.classList.add("show");
+    this.showInstructionsPage();
 
     console.log("Consent:", state.consentData);
   },
@@ -75,8 +106,18 @@ window.app = {
     console.log("Consent:", state.consentData);
   },
 
+  handleInstructionsNext() {
+    const messageBox = document.getElementById("messageBox");
+    messageBox.textContent =
+      "Next step placeholder: this will later open the task page.";
+    messageBox.classList.add("show");
+
+    console.log("Instructions completed");
+  },
+
   init() {
     this.initializeParticipantId();
     this.restoreScreen();
+    this.setupHistoryGuard();
   }
 };

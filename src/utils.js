@@ -6,5 +6,12 @@ window.utils = {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  },
+
+  scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: "instant"
+    });
   }
 };

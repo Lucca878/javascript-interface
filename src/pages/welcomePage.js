@@ -1,4 +1,6 @@
 window.renderWelcomePage = function renderWelcomePage(app) {
+  utils.scrollToTop();
+
   const appRoot = document.getElementById("app");
 
   appRoot.innerHTML = `

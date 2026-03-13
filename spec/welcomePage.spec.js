@@ -34,4 +34,12 @@ describe("welcome page", function () {
     expect(document.getElementById("acceptButton")).not.toBeNull();
     expect(document.getElementById("denyButton")).not.toBeNull();
   });
+  it("scrolls to the top when the welcome page is rendered", function () {
+    state.participantId = "test-123";
+    spyOn(utils, "scrollToTop");
+
+    app.showWelcomePage();
+
+    expect(utils.scrollToTop).toHaveBeenCalled();
+  });
 });

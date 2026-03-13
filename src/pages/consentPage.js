@@ -1,4 +1,5 @@
 window.renderConsentPage = function renderConsentPage(app) {
+  utils.scrollToTop();
   const appRoot = document.getElementById("app");
 
   appRoot.innerHTML = `
