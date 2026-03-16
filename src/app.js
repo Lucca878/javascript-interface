@@ -76,6 +76,100 @@ window.app = {
     renderInstructionsPage(this);
   },
 
+  renderTaskLoadingState() {
+    const appRoot = document.getElementById("app");
+
+    if (appRoot) {
+      appRoot.innerHTML = `
+        <h1 class="title">Main Task</h1>
+        <p class="subtitle">Loading statements...</p>
+      `;
+    }
+  },
+
+  renderTaskLoadErrorState() {
+    const appRoot = document.getElementById("app");
+
+    if (!appRoot) {
+      return;
+    }
+
+    appRoot.innerHTML = `
+      <h1 class="title">Main Task</h1>
+      <p class="subtitle">We could not load the statement corpus from the server.</p>
+      <div class="actions">
+        <button class="button" id="taskRetryLoadButton">Retry loading statements</button>
+      </div>
+    `;
+
+    document.getElementById("taskRetryLoadButton").addEventListener("click", () => {
+      corpusService.corpus = null;
+      corpusService.corpusSource = "placeholder";
+      corpusService.loadPromise = null;
+      this.showTaskPage();
+    });
+  },
+
+  shouldRequirePhpCorpus() {
+    return Boolean(window.APP_CONFIG && window.APP_CONFIG.corpusPhpEndpoint);
+  },
+
+  isPhpCorpusReady() {
+    return (
+      corpusService.corpusSource === "php" &&
+      Array.isArray(corpusService.corpus) &&
+      corpusService.corpus.length > 0
+    );
+  },
+
+  waitForCorpusAndRenderTask(pushHistory) {
+    if (!corpusService.loadPromise) {
+      corpusService.preloadCorpus();
+    }
+
+    storage.setCurrentScreen("task");
+
+    if (pushHistory) {
+      this.pushHistoryState("task");
+    }
+
+    this.renderTaskLoadingState();
+
+    corpusService.loadPromise.finally(() => {
+      if (storage.getCurrentScreen() !== "task") {
+        return;
+      }
+
+      if (!this.isPhpCorpusReady()) {
+        this.renderTaskLoadErrorState();
+        return;
+      }
+
+      const hasSession = this.ensureTaskSession();
+
+      if (!hasSession) {
+        this.renderTaskLoadErrorState();
+        return;
+      }
+
+      renderTaskPage(this);
+    });
+  },
+
+  hasPendingCorpusLoadWithoutTaskSession() {
+    if (state.taskSession || storage.getTaskSession()) {
+      return false;
+    }
+
+    const corpusAlreadyLoaded = Array.isArray(corpusService.corpus) && corpusService.corpus.length > 0;
+
+    if (this.shouldRequirePhpCorpus()) {
+      return !this.isPhpCorpusReady();
+    }
+
+    return Boolean(corpusService.loadPromise) && !corpusAlreadyLoaded;
+  },
+
   createTaskSession() {
     const statement = corpusService.getRandomStatement();
     const originalPrediction = modelService.getPrediction(statement.text_truncated);
@@ -83,6 +177,7 @@ window.app = {
     state.taskSession = {
       statementId: String(statement.index),
       originalText: statement.text_truncated,
+      corpusSource: corpusService.corpusSource || "placeholder",
       originalPrediction,
       attemptsUsed: 0,
       maxAttempts: 10,
@@ -96,23 +191,62 @@ window.app = {
     storage.setTaskSession(state.taskSession);
   },
 
+  shouldRefreshTaskSessionFromPhp(taskSession) {
+    if (!taskSession) {
+      return false;
+    }
+
+    const phpCorpusLoaded = corpusService.corpusSource === "php";
+    const sessionFromPhp = taskSession.corpusSource === "php";
+    const untouchedSession =
+      taskSession.attemptsUsed === 0 &&
+      !taskSession.lastRewrite &&
+      !taskSession.latestPrediction;
+
+    return phpCorpusLoaded && !sessionFromPhp && untouchedSession;
+  },
+
   ensureTaskSession() {
     if (state.taskSession) {
-      return;
+      if (this.shouldRefreshTaskSessionFromPhp(state.taskSession)) {
+        this.createTaskSession();
+      }
+      return true;
     }
 
     const storedTaskSession = storage.getTaskSession();
 
     if (storedTaskSession) {
+      if (this.shouldRefreshTaskSessionFromPhp(storedTaskSession)) {
+        this.createTaskSession();
+        return true;
+      }
+
       state.taskSession = storedTaskSession;
-      return;
+      return true;
+    }
+
+    if (this.shouldRequirePhpCorpus() && !this.isPhpCorpusReady()) {
+      return false;
     }
 
     this.createTaskSession();
+    return true;
   },
 
   showTaskPage() {
-    this.ensureTaskSession();
+    if (this.hasPendingCorpusLoadWithoutTaskSession()) {
+      this.waitForCorpusAndRenderTask(true);
+      return;
+    }
+
+    const hasSession = this.ensureTaskSession();
+
+    if (!hasSession) {
+      this.waitForCorpusAndRenderTask(true);
+      return;
+    }
+
     storage.setCurrentScreen("task");
     this.pushHistoryState("task");
     renderTaskPage(this);
@@ -122,7 +256,18 @@ window.app = {
     const storedScreen = storage.getCurrentScreen();
 
     if (storedScreen === "task") {
-      this.ensureTaskSession();
+      if (this.hasPendingCorpusLoadWithoutTaskSession()) {
+        this.waitForCorpusAndRenderTask(false);
+        return;
+      }
+
+      const hasSession = this.ensureTaskSession();
+
+      if (!hasSession) {
+        this.waitForCorpusAndRenderTask(false);
+        return;
+      }
+
       renderTaskPage(this);
       return;
     }
@@ -219,6 +364,15 @@ window.app = {
   },
 
   init() {
+    const configuredEndpoint = window.APP_CONFIG && window.APP_CONFIG.corpusPhpEndpoint;
+
+    if (configuredEndpoint) {
+      corpusService.setPhpEndpoint(configuredEndpoint);
+    }
+
+    // Start loading statements from PHP immediately; task flow will fallback safely if unavailable.
+    corpusService.preloadCorpus();
+
     this.initializeParticipantId();
     this.restoreScreen();
     this.setupHistoryGuard();

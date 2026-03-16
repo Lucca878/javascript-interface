@@ -6,6 +6,7 @@ describe("app core", function () {
 
   afterEach(function () {
     testHelpers.clearTestRoot();
+    delete window.APP_CONFIG;
   });
 
   it("generates a fallback participant ID when none exists", function () {
@@ -145,5 +146,100 @@ describe("app core", function () {
 
     expect(app.replaceHistoryState).toHaveBeenCalled();
     expect(window.addEventListener).toHaveBeenCalledWith("popstate", jasmine.any(Function));
+  });
+
+  it("shows a loading state on task page while PHP corpus is still loading", function () {
+    window.APP_CONFIG = { corpusPhpEndpoint: "api/statements.php" };
+    corpusService.loadPromise = new Promise(function () {});
+    corpusService.corpus = null;
+    corpusService.corpusSource = "placeholder";
+
+    app.showTaskPage();
+
+    expect(document.getElementById("app").textContent).toContain("Loading statements...");
+    expect(document.getElementById("taskSubmitButton")).toBeNull();
+  });
+
+  it("renders the task page after PHP corpus load completes", function (done) {
+    window.APP_CONFIG = { corpusPhpEndpoint: "api/statements.php" };
+    let resolveLoad;
+
+    corpusService.loadPromise = new Promise(function (resolve) {
+      resolveLoad = resolve;
+    });
+    corpusService.corpus = null;
+    corpusService.corpusSource = "placeholder";
+
+    app.showTaskPage();
+
+    corpusService.corpus = [{ index: "901", text_truncated: "Loaded from strict PHP wait path." }];
+    corpusService.corpusSource = "php";
+    resolveLoad();
+
+    setTimeout(function () {
+      expect(document.getElementById("app").textContent).toContain("Loaded from strict PHP wait path.");
+      expect(document.getElementById("taskSubmitButton")).not.toBeNull();
+      done();
+    }, 0);
+  });
+
+  it("shows an error state when PHP corpus cannot be loaded", function (done) {
+    window.APP_CONFIG = { corpusPhpEndpoint: "api/statements.php" };
+    let resolveLoad;
+
+    corpusService.loadPromise = new Promise(function (resolve) {
+      resolveLoad = resolve;
+    });
+    corpusService.corpus = null;
+    corpusService.corpusSource = "placeholder";
+
+    app.showTaskPage();
+    resolveLoad();
+
+    setTimeout(function () {
+      expect(document.getElementById("app").textContent).toContain("could not load the statement corpus");
+      expect(document.getElementById("taskRetryLoadButton")).not.toBeNull();
+      done();
+    }, 0);
+  });
+
+  it("refreshes untouched placeholder task sessions when PHP corpus is ready", function () {
+    corpusService.corpusSource = "php";
+    corpusService.corpus = [{ index: "777", text_truncated: "Fresh statement from loaded PHP corpus." }];
+    storage.setTaskSession({
+      statementId: "1",
+      originalText: "Placeholder statement",
+      corpusSource: "placeholder",
+      originalPrediction: { label: 1, labelStr: "truthful", confidence: 75 },
+      attemptsUsed: 0,
+      maxAttempts: 10,
+      lastRewrite: "",
+      latestPrediction: null,
+      statusMessage: "",
+      statusType: "info"
+    });
+
+    app.ensureTaskSession();
+
+    expect(state.taskSession.originalText).toBe("Fresh statement from loaded PHP corpus.");
+    expect(state.taskSession.corpusSource).toBe("php");
+  });
+
+  it("uses configured corpus endpoint and preloads corpus on init", function () {
+    const previousConfig = window.APP_CONFIG;
+    window.APP_CONFIG = { corpusPhpEndpoint: "api/custom-statements.php" };
+
+    spyOn(corpusService, "setPhpEndpoint");
+    spyOn(corpusService, "preloadCorpus").and.returnValue(Promise.resolve([]));
+    spyOn(app, "initializeParticipantId");
+    spyOn(app, "restoreScreen");
+    spyOn(app, "setupHistoryGuard");
+
+    app.init();
+
+    expect(corpusService.setPhpEndpoint).toHaveBeenCalledWith("api/custom-statements.php");
+    expect(corpusService.preloadCorpus).toHaveBeenCalled();
+
+    window.APP_CONFIG = previousConfig;
   });
 });

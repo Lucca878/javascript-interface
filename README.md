@@ -16,3 +16,6 @@ Backend endpoints will be added later as placeholders first.
 git add .
 git commit -m "Describe change"
 git push
+
+# running php backend 
+/opt/homebrew/bin/php -S localhost:8000

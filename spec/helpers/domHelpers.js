@@ -17,5 +17,12 @@ window.testHelpers = {
       state.consentData = null;
       state.taskSession = null;
     }
+
+    if (window.corpusService) {
+      corpusService.corpus = null;
+      corpusService.loadPromise = null;
+      corpusService.corpusSource = "placeholder";
+      corpusService.phpEndpoint = "api/statements.php";
+    }
   }
 };

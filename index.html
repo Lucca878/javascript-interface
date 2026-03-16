@@ -13,6 +13,18 @@
     </section>
   </main>
 
+  <script>
+    const defaultCorpusEndpoint =
+      window.location.port === "8000"
+        ? "api/statements.php"
+        : "http://localhost:8000/api/statements.php";
+
+    window.APP_CONFIG = {
+      // Example: "api/statements.php" or "/backend/get_statements.php"
+      corpusPhpEndpoint: defaultCorpusEndpoint
+    };
+  </script>
+
   <script src="src/state.js"></script>
   <script src="src/storage.js"></script>
   <script src="src/utils.js"></script>
