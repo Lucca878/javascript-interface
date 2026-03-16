@@ -66,6 +66,27 @@ describe("app core", function () {
     expect(document.getElementById("app").textContent).toContain("Instructions");
     expect(document.getElementById("instructionsNextButton")).not.toBeNull();
   });
+  it("restores the task page when the stored screen is task", function () {
+    spyOn(app, "getProlificIdFromUrl").and.returnValue(null);
+    storage.setParticipantId("stored-001");
+    storage.setCurrentScreen("task");
+    storage.setTaskSession({
+      statementId: "stmt-001",
+      originalText: "Stored task statement.",
+      originalPrediction: { label: 1, labelStr: "truthful", confidence: 88 },
+      attemptsUsed: 0,
+      maxAttempts: 10,
+      lastRewrite: "",
+      latestPrediction: null,
+      statusMessage: "",
+      statusType: "info"
+    });
+
+    app.init();
+
+    expect(document.getElementById("app").textContent).toContain("Main Task");
+    expect(document.getElementById("taskSubmitButton")).not.toBeNull();
+  });
   it("stores the current screen and pushes history when showing the consent page", function () {
     spyOn(app, "pushHistoryState");
     testHelpers.mountAppContainer();
@@ -83,6 +104,28 @@ describe("app core", function () {
 
     expect(storage.getCurrentScreen()).toBe("instructions");
     expect(app.pushHistoryState).toHaveBeenCalledWith("instructions");
+  });
+  it("stores the current screen and pushes history when showing the task page", function () {
+    spyOn(app, "pushHistoryState");
+    spyOn(app, "ensureTaskSession").and.callFake(function () {
+      state.taskSession = {
+        statementId: "stmt-001",
+        originalText: "Task statement.",
+        originalPrediction: { label: 1, labelStr: "truthful", confidence: 75 },
+        attemptsUsed: 0,
+        maxAttempts: 10,
+        lastRewrite: "",
+        latestPrediction: null,
+        statusMessage: "",
+        statusType: "info"
+      };
+    });
+    testHelpers.mountAppContainer();
+
+    app.showTaskPage();
+
+    expect(storage.getCurrentScreen()).toBe("task");
+    expect(app.pushHistoryState).toHaveBeenCalledWith("task");
   });
   it("restores the stored screen when popstate is handled", function () {
     storage.setCurrentScreen("instructions");

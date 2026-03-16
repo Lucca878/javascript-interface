@@ -1,4 +1,5 @@
 window.state = {
   participantId: null,
-  consentData: null
+  consentData: null,
+  taskSession: null
 };

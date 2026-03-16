@@ -12,6 +12,10 @@ window.app = {
     return "pid-" + Math.random().toString(36).slice(2, 11);
   },
 
+  countWords(text) {
+    return text.trim() ? text.trim().split(/\s+/).length : 0;
+  },
+
   initializeParticipantId() {
     const prolificId = this.getProlificIdFromUrl();
 
@@ -72,8 +76,56 @@ window.app = {
     renderInstructionsPage(this);
   },
 
+  createTaskSession() {
+    const statement = corpusService.getRandomStatement();
+    const originalPrediction = modelService.getPrediction(statement.text_truncated);
+
+    state.taskSession = {
+      statementId: String(statement.index),
+      originalText: statement.text_truncated,
+      originalPrediction,
+      attemptsUsed: 0,
+      maxAttempts: 10,
+      lastRewrite: "",
+      draftText: "",
+      latestPrediction: null,
+      statusMessage: "",
+      statusType: "info"
+    };
+
+    storage.setTaskSession(state.taskSession);
+  },
+
+  ensureTaskSession() {
+    if (state.taskSession) {
+      return;
+    }
+
+    const storedTaskSession = storage.getTaskSession();
+
+    if (storedTaskSession) {
+      state.taskSession = storedTaskSession;
+      return;
+    }
+
+    this.createTaskSession();
+  },
+
+  showTaskPage() {
+    this.ensureTaskSession();
+    storage.setCurrentScreen("task");
+    this.pushHistoryState("task");
+    renderTaskPage(this);
+  },
+
   restoreScreen() {
     const storedScreen = storage.getCurrentScreen();
+
+    if (storedScreen === "task") {
+      this.ensureTaskSession();
+      renderTaskPage(this);
+      return;
+    }
 
     if (storedScreen === "instructions") {
       renderInstructionsPage(this);
@@ -107,12 +159,63 @@ window.app = {
   },
 
   handleInstructionsNext() {
-    const messageBox = document.getElementById("messageBox");
-    messageBox.textContent =
-      "Next step placeholder: this will later open the task page.";
-    messageBox.classList.add("show");
+    this.showTaskPage();
 
     console.log("Instructions completed");
+  },
+
+  handleTaskSubmit() {
+    const taskSession = state.taskSession;
+    const rewriteInput = document.getElementById("taskRewriteInput");
+    const rewriteText = rewriteInput.value.trim();
+
+    if (!rewriteText) {
+      taskSession.statusMessage = "Please write a statement before submitting.";
+      taskSession.statusType = "warning";
+      storage.setTaskSession(taskSession);
+      renderTaskPage(this);
+      return;
+    }
+
+    const originalWordCount = this.countWords(taskSession.originalText);
+    const rewriteWordCount = this.countWords(rewriteText);
+
+    if (Math.abs(rewriteWordCount - originalWordCount) > 20) {
+      taskSession.draftText = rewriteText;
+      taskSession.statusMessage = `Your rewritten statement must stay within ${originalWordCount} +/- 20 words. Your current rewrite has ${rewriteWordCount} words.`;
+      taskSession.statusType = "warning";
+      storage.setTaskSession(taskSession);
+      renderTaskPage(this);
+      return;
+    }
+
+    if (taskSession.attemptsUsed >= taskSession.maxAttempts) {
+      taskSession.draftText = rewriteText;
+      taskSession.statusMessage = "You have already used all available attempts for this statement.";
+      taskSession.statusType = "warning";
+      storage.setTaskSession(taskSession);
+      renderTaskPage(this);
+      return;
+    }
+
+    const latestPrediction = modelService.getPrediction(rewriteText);
+    taskSession.attemptsUsed += 1;
+    taskSession.lastRewrite = rewriteText;
+    taskSession.draftText = "";
+    taskSession.latestPrediction = latestPrediction;
+    taskSession.statusType = "info";
+
+    if (latestPrediction.label !== taskSession.originalPrediction.label) {
+      taskSession.statusMessage = "Placeholder success state: the rewrite flipped the model prediction.";
+    } else if (taskSession.attemptsUsed >= taskSession.maxAttempts) {
+      taskSession.statusMessage = "Placeholder end-of-attempts state: you reached the maximum number of rewrites for this statement.";
+      taskSession.statusType = "warning";
+    } else {
+      taskSession.statusMessage = "Placeholder feedback state: the prediction did not flip yet, so the participant can try another rewrite.";
+    }
+
+    storage.setTaskSession(taskSession);
+    renderTaskPage(this);
   },
 
   init() {

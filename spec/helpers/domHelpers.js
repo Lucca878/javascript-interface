@@ -15,6 +15,7 @@ window.testHelpers = {
     if (window.state) {
       state.participantId = null;
       state.consentData = null;
+      state.taskSession = null;
     }
   }
 };

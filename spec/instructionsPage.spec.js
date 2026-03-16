@@ -21,7 +21,8 @@ describe("instructions page", function () {
   it("shows a placeholder message when Next is clicked", function () {
     document.getElementById("instructionsNextButton").click();
 
-    expect(document.getElementById("messageBox").textContent).toContain("task page");
+    expect(document.getElementById("app").textContent).toContain("Main Task");
+    expect(document.getElementById("taskSubmitButton")).not.toBeNull();
   });
   it("scrolls to the top when the instructions page is rendered", function () {
     spyOn(utils, "scrollToTop");
