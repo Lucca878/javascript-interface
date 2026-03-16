@@ -13,3 +13,8 @@ node_modules/
 
 # Logs
 *.log
+
+# Python
+backend/.venv/
+__pycache__/
+*.py[cod]
