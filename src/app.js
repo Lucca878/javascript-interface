@@ -145,14 +145,7 @@ window.app = {
         return;
       }
 
-      const hasSession = this.ensureTaskSession();
-
-      if (!hasSession) {
-        this.renderTaskLoadErrorState();
-        return;
-      }
-
-      renderTaskPage(this);
+      this.resolveTaskSessionAndRender();
     });
   },
 
@@ -172,11 +165,38 @@ window.app = {
 
   createTaskSession() {
     const statement = corpusService.getRandomStatement();
-    const originalPrediction = modelService.getPrediction(statement.text_truncated);
+    const statementId = String(statement.index);
+    const originalText = statement.text_truncated;
+
+    if (modelService.getApiEndpoint()) {
+      return modelService.getPrediction(originalText, {
+        participantId: state.participantId,
+        statementIndex: statementId
+      }).then((originalPrediction) => {
+        state.taskSession = {
+          statementId,
+          originalText,
+          corpusSource: corpusService.corpusSource || "placeholder",
+          originalPrediction,
+          attemptsUsed: 0,
+          maxAttempts: 10,
+          lastRewrite: "",
+          draftText: "",
+          latestPrediction: null,
+          statusMessage: "",
+          statusType: "info"
+        };
+
+        storage.setTaskSession(state.taskSession);
+        return true;
+      });
+    }
+
+    const originalPrediction = modelService.getPredictionSync(originalText);
 
     state.taskSession = {
-      statementId: String(statement.index),
-      originalText: statement.text_truncated,
+      statementId,
+      originalText,
       corpusSource: corpusService.corpusSource || "placeholder",
       originalPrediction,
       attemptsUsed: 0,
@@ -189,6 +209,7 @@ window.app = {
     };
 
     storage.setTaskSession(state.taskSession);
+    return true;
   },
 
   shouldRefreshTaskSessionFromPhp(taskSession) {
@@ -209,7 +230,7 @@ window.app = {
   ensureTaskSession() {
     if (state.taskSession) {
       if (this.shouldRefreshTaskSessionFromPhp(state.taskSession)) {
-        this.createTaskSession();
+        return this.createTaskSession();
       }
       return true;
     }
@@ -218,8 +239,7 @@ window.app = {
 
     if (storedTaskSession) {
       if (this.shouldRefreshTaskSessionFromPhp(storedTaskSession)) {
-        this.createTaskSession();
-        return true;
+        return this.createTaskSession();
       }
 
       state.taskSession = storedTaskSession;
@@ -230,8 +250,49 @@ window.app = {
       return false;
     }
 
-    this.createTaskSession();
-    return true;
+    return this.createTaskSession();
+  },
+
+  resolveTaskSessionAndRender() {
+    const sessionResult = this.ensureTaskSession();
+
+    if (sessionResult && typeof sessionResult.then === "function") {
+      this.renderTaskLoadingState();
+      sessionResult
+        .then(() => {
+          if (storage.getCurrentScreen() !== "task") {
+            return;
+          }
+
+          renderTaskPage(this);
+        })
+        .catch((error) => {
+          const appRoot = document.getElementById("app");
+          if (appRoot) {
+            appRoot.innerHTML = `
+              <h1 class="title">Main Task</h1>
+              <p class="subtitle">We could not load the original AI prediction.</p>
+              <p class="subtitle">${utils.escapeHtml(error.message || "Please try again.")}</p>
+              <div class="actions">
+                <button class="button" id="taskRetryLoadButton">Retry loading task</button>
+              </div>
+            `;
+            document.getElementById("taskRetryLoadButton").addEventListener("click", () => {
+              state.taskSession = null;
+              storage.clearTaskSession();
+              this.showTaskPage();
+            });
+          }
+        });
+      return;
+    }
+
+    if (!sessionResult) {
+      this.waitForCorpusAndRenderTask(storage.getCurrentScreen() !== "task");
+      return;
+    }
+
+    renderTaskPage(this);
   },
 
   showTaskPage() {
@@ -240,16 +301,9 @@ window.app = {
       return;
     }
 
-    const hasSession = this.ensureTaskSession();
-
-    if (!hasSession) {
-      this.waitForCorpusAndRenderTask(true);
-      return;
-    }
-
     storage.setCurrentScreen("task");
     this.pushHistoryState("task");
-    renderTaskPage(this);
+    this.resolveTaskSessionAndRender();
   },
 
   restoreScreen() {
@@ -260,15 +314,7 @@ window.app = {
         this.waitForCorpusAndRenderTask(false);
         return;
       }
-
-      const hasSession = this.ensureTaskSession();
-
-      if (!hasSession) {
-        this.waitForCorpusAndRenderTask(false);
-        return;
-      }
-
-      renderTaskPage(this);
+      this.resolveTaskSessionAndRender();
       return;
     }
 
@@ -309,7 +355,7 @@ window.app = {
     console.log("Instructions completed");
   },
 
-  handleTaskSubmit() {
+  async handleTaskSubmit() {
     const taskSession = state.taskSession;
     const rewriteInput = document.getElementById("taskRewriteInput");
     const rewriteText = rewriteInput.value.trim();
@@ -343,7 +389,22 @@ window.app = {
       return;
     }
 
-    const latestPrediction = modelService.getPrediction(rewriteText);
+    let latestPrediction;
+
+    try {
+      latestPrediction = await modelService.getPrediction(rewriteText, {
+        participantId: state.participantId,
+        statementIndex: taskSession.statementId
+      });
+    } catch (error) {
+      taskSession.draftText = rewriteText;
+      taskSession.statusMessage = `Model prediction failed. ${error.message || "Please try again."}`;
+      taskSession.statusType = "warning";
+      storage.setTaskSession(taskSession);
+      renderTaskPage(this);
+      return;
+    }
+
     taskSession.attemptsUsed += 1;
     taskSession.lastRewrite = rewriteText;
     taskSession.draftText = "";

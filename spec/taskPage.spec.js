@@ -59,10 +59,10 @@ describe("task page", function () {
     expect(state.taskSession.attemptsUsed).toBe(0);
   });
 
-  it("records a rewrite attempt and shows model feedback", function () {
+  it("records a rewrite attempt and shows model feedback", async function () {
     document.getElementById("taskRewriteInput").value = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
 
-    app.handleTaskSubmit();
+    await app.handleTaskSubmit();
 
     expect(state.taskSession.attemptsUsed).toBe(1);
     expect(state.taskSession.latestPrediction).not.toBeNull();
@@ -79,35 +79,35 @@ describe("task page", function () {
     expect(state.taskSession.attemptsUsed).toBe(10);
   });
 
-  it("shows a success message when the rewrite flips the model prediction", function () {
+  it("shows a success message when the rewrite flips the model prediction", async function () {
     // Original label is 1 (truthful); spy returns 0 (deceptive) to force a flip
     spyOn(modelService, "getPrediction").and.returnValue({ label: 0, labelStr: "deceptive", confidence: 72.5 });
     document.getElementById("taskRewriteInput").value = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
 
-    app.handleTaskSubmit();
+    await app.handleTaskSubmit();
 
     expect(state.taskSession.attemptsUsed).toBe(1);
     expect(document.getElementById("app").textContent).toContain("flipped");
   });
 
-  it("shows an end-of-attempts message when the last attempt does not flip the prediction", function () {
+  it("shows an end-of-attempts message when the last attempt does not flip the prediction", async function () {
     state.taskSession.attemptsUsed = 9;
     // Same label as original (1 = truthful) → no flip
     spyOn(modelService, "getPrediction").and.returnValue({ label: 1, labelStr: "truthful", confidence: 80.0 });
     document.getElementById("taskRewriteInput").value = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
 
-    app.handleTaskSubmit();
+    await app.handleTaskSubmit();
 
     expect(state.taskSession.attemptsUsed).toBe(10);
     expect(document.getElementById("app").textContent).toContain("maximum number of rewrites");
   });
 
-  it("accepts a rewrite that is exactly 20 words longer than the original", function () {
+  it("accepts a rewrite that is exactly 20 words longer than the original", async function () {
     // Original: 13 words. This rewrite: 33 words. |33 - 13| = 20, which is NOT > 20 → should pass validation.
     document.getElementById("taskRewriteInput").value =
       "I took the train to Rotterdam and met a friend by the river, then we walked along the waterfront, had coffee at a small café, and talked about our plans for the evening.";
 
-    app.handleTaskSubmit();
+    await app.handleTaskSubmit();
 
     // statusMessage should be empty (not the word-count warning) — the task goal panel always
     // shows "+/- 20 words" in its description, so we check state directly instead of page text.
@@ -125,13 +125,36 @@ describe("task page", function () {
     );
   });
 
-  it("clears the textarea after a successful submission", function () {
+  it("clears the textarea after a successful submission", async function () {
     spyOn(modelService, "getPrediction").and.returnValue({ label: 1, labelStr: "truthful", confidence: 80.0 });
     document.getElementById("taskRewriteInput").value = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
 
-    app.handleTaskSubmit();
+    await app.handleTaskSubmit();
 
     expect(document.getElementById("taskRewriteInput").value).toBe("");
+  });
+
+  it("uses the previous successful rewrite as textarea placeholder", async function () {
+    spyOn(modelService, "getPrediction").and.returnValue({ label: 1, labelStr: "truthful", confidence: 80.0 });
+    const rewriteText = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+    document.getElementById("taskRewriteInput").value = rewriteText;
+
+    await app.handleTaskSubmit();
+
+    expect(document.getElementById("taskRewriteInput").getAttribute("placeholder")).toBe(rewriteText);
+  });
+
+  it("does not consume an attempt when model prediction fails", async function () {
+    spyOn(modelService, "getPrediction").and.returnValue(Promise.reject(new Error("backend unavailable")));
+    const rewriteText = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+    document.getElementById("taskRewriteInput").value = rewriteText;
+
+    await app.handleTaskSubmit();
+
+    expect(state.taskSession.attemptsUsed).toBe(0);
+    expect(state.taskSession.draftText).toBe(rewriteText);
+    expect(document.getElementById("app").textContent).toContain("Model prediction failed");
+    expect(document.getElementById("taskRewriteInput").value).toBe(rewriteText);
   });
 
   it("preserves the draft text in the textarea after a word-count validation failure", function () {

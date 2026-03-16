@@ -57,7 +57,7 @@ window.renderTaskPage = function renderTaskPage(app) {
       id="taskRewriteInput"
       class="task-textarea"
       rows="8"
-      placeholder="${utils.escapeHtml(taskSession.originalText)}"
+      placeholder="${utils.escapeHtml(taskSession.lastRewrite || taskSession.originalText)}"
     >${utils.escapeHtml(taskSession.draftText || "")}</textarea>
 
     <div class="task-meta">

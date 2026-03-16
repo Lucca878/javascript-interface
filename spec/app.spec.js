@@ -120,6 +120,7 @@ describe("app core", function () {
         statusMessage: "",
         statusType: "info"
       };
+      return true;
     });
     testHelpers.mountAppContainer();
 
@@ -241,5 +242,35 @@ describe("app core", function () {
     expect(corpusService.preloadCorpus).toHaveBeenCalled();
 
     window.APP_CONFIG = previousConfig;
+  });
+
+  it("renders task page after async task session initialization resolves", function (done) {
+    spyOn(app, "pushHistoryState");
+    spyOn(app, "ensureTaskSession").and.returnValue(
+      Promise.resolve().then(function () {
+        state.taskSession = {
+          statementId: "stmt-123",
+          originalText: "Async task statement.",
+          originalPrediction: { label: 1, labelStr: "truthful", confidence: 77.0 },
+          attemptsUsed: 0,
+          maxAttempts: 10,
+          lastRewrite: "",
+          draftText: "",
+          latestPrediction: null,
+          statusMessage: "",
+          statusType: "info"
+        };
+      })
+    );
+
+    app.showTaskPage();
+
+    expect(document.getElementById("app").textContent).toContain("Loading statements...");
+
+    setTimeout(function () {
+      expect(document.getElementById("app").textContent).toContain("Main Task");
+      expect(document.getElementById("taskSubmitButton")).not.toBeNull();
+      done();
+    }, 0);
   });
 });

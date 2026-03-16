@@ -4,6 +4,7 @@ import os
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 
@@ -54,6 +55,19 @@ class ErrorResponse(BaseModel):
 
 
 app = FastAPI(title="Deception Classifier API", version="1.0.0")
+
+app.add_middleware(
+	CORSMiddleware,
+	allow_origins=[
+		"http://127.0.0.1:8000",
+		"http://localhost:8000",
+		"http://127.0.0.1:5500",
+		"http://localhost:5500",
+	],
+	allow_credentials=False,
+	allow_methods=["*"],
+	allow_headers=["*"],
+)
 
 
 def normalize_raw_label(raw_label: int) -> int:

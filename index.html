@@ -14,14 +14,22 @@
   </main>
 
   <script>
+    const runningLocally = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
     const defaultCorpusEndpoint =
-      window.location.port === "8000"
-        ? "api/statements.php"
-        : "http://localhost:8000/api/statements.php";
+      runningLocally && window.location.port !== "8000"
+        ? "http://127.0.0.1:8000/api/statements.php"
+        : "api/statements.php";
+
+    const defaultModelEndpoint =
+      runningLocally
+        ? "http://127.0.0.1:8080/predict"
+        : "";
 
     window.APP_CONFIG = {
       // Example: "api/statements.php" or "/backend/get_statements.php"
-      corpusPhpEndpoint: defaultCorpusEndpoint
+      corpusPhpEndpoint: defaultCorpusEndpoint,
+      // Example local backend endpoint for FastAPI model service
+      modelApiEndpoint: defaultModelEndpoint
     };
   </script>
 
