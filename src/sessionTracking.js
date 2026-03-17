@@ -3,6 +3,13 @@
  * Records timing and data events throughout the participant's session
  */
 
+function persistSessionData() {
+  if (window.storage && typeof window.storage.setSessionData === "function") {
+    window.storage.setSessionData(state.sessionData);
+  }
+}
+window.persistSessionData = persistSessionData;
+
 // Record when a participant enters a page
 window.recordPageEnter = function(pageName) {
   if (!state.sessionData.pages[pageName]) {
@@ -19,6 +26,8 @@ window.recordPageEnter = function(pageName) {
   if (pageName === "task") {
     state.sessionData.pages.task.currentAttemptStartedAt = enterTimestamp;
   }
+
+  persistSessionData();
 
   console.log(`[Session] Entered ${pageName} at ${state.sessionData.pages[pageName].enterTime}`);
 };
@@ -37,6 +46,8 @@ window.recordPageExit = function(pageName) {
   const enterTime = new Date(state.sessionData.pages[pageName].enterTime);
   const exitTimeObj = new Date(exitTime);
   state.sessionData.pages[pageName].duration = exitTimeObj - enterTime;
+
+  persistSessionData();
   
   console.log(`[Session] Exited ${pageName} at ${exitTime} (duration: ${state.sessionData.pages[pageName].duration}ms)`);
 };
@@ -89,6 +100,8 @@ window.recordRewriteAttempt = function(rewriteText, label, confidence) {
 
   // The next rewrite starts timing from this submission moment.
   state.sessionData.pages.task.currentAttemptStartedAt = submittedAt;
+
+  persistSessionData();
   
   console.log(`[Session] Recorded rewrite attempt ${attemptNumber} for statement ${currentStatement.statementId}`);
 };
@@ -102,6 +115,7 @@ window.recordFeedback = function(formData) {
     feedbackText: formData.feedbackText,
     timestamp: new Date().toISOString()
   };
+  persistSessionData();
   console.log(`[Session] Recorded feedback submission`);
 };
 
@@ -113,6 +127,8 @@ window.recordSessionEnd = function() {
   const startTime = new Date(state.sessionData.sessionStartTime);
   const endTime = new Date(state.sessionData.sessionEndTime);
   state.sessionData.totalDuration = endTime - startTime;
+
+  persistSessionData();
   
   console.log(`[Session] Session ended at ${state.sessionData.sessionEndTime} (total duration: ${state.sessionData.totalDuration}ms)`);
 };
@@ -135,6 +151,7 @@ window.postSessionData = function() {
     })
     .then(data => {
       console.log('[Session] Session data posted successfully:', data);
+      storage.clearSessionData();
       return data;
     })
     .catch(error => {

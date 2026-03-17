@@ -10,7 +10,7 @@ function generateUUID() {
 // Extract prolificId from URL params
 function getProlificId() {
   const params = new URLSearchParams(window.location.search);
-  return params.get('PROLIFIC_ID') || 'unknown';
+  return params.get('PROLIFIC_PID') || 'unknown';
 }
 
 window.state = {
@@ -26,6 +26,7 @@ window.state = {
     prolificId: getProlificId(),
     sessionStartTime: new Date().toISOString(),
     sessionEndTime: null,
+    sessionDataPosted: false,
     pages: {
       consent: { enterTime: null, exitTime: null, duration: null, decision: null },
       instructions: { enterTime: null, exitTime: null, duration: null },

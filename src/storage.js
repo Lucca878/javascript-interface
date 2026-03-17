@@ -4,6 +4,7 @@ window.storage = {
   TASK_SESSION_KEY: "taskSession",
   FEEDBACK_SESSION_KEY: "feedbackSession",
   FEEDBACK_SUBMISSION_KEY: "feedbackSubmission",
+  SESSION_DATA_KEY: "sessionData",
 
   getParticipantId() {
     const localValue = localStorage.getItem(this.PARTICIPANT_ID_KEY);
@@ -87,5 +88,23 @@ window.storage = {
 
   clearFeedbackSubmission() {
     sessionStorage.removeItem(this.FEEDBACK_SUBMISSION_KEY);
+  },
+
+  getSessionData() {
+    const storedValue = localStorage.getItem(this.SESSION_DATA_KEY);
+
+    if (!storedValue) {
+      return null;
+    }
+
+    return JSON.parse(storedValue);
+  },
+
+  setSessionData(sessionData) {
+    localStorage.setItem(this.SESSION_DATA_KEY, JSON.stringify(sessionData));
+  },
+
+  clearSessionData() {
+    localStorage.removeItem(this.SESSION_DATA_KEY);
   }
 };

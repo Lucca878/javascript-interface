@@ -36,6 +36,19 @@ window.app = {
     storage.setParticipantId(state.participantId);
   },
 
+  initializeSessionData() {
+    const storedSessionData = storage.getSessionData();
+
+    if (
+      storedSessionData &&
+      typeof storedSessionData === "object" &&
+      storedSessionData.sessionId &&
+      storedSessionData.pages
+    ) {
+      state.sessionData = storedSessionData;
+    }
+  },
+
   pushHistoryState(screenName) {
     window.history.pushState({ screen: screenName }, "", window.location.href);
   },
@@ -110,6 +123,21 @@ window.app = {
 
   showEndPage() {
     this.trackScreenTransition("end");
+
+    if (typeof window.recordSessionEnd === "function" && !state.sessionData.sessionEndTime) {
+      window.recordSessionEnd();
+    }
+
+    if (typeof window.postSessionData === "function" && !state.sessionData.sessionDataPosted) {
+      state.sessionData.sessionDataPosted = true;
+      storage.setSessionData(state.sessionData);
+      window.postSessionData().catch((error) => {
+        console.warn("Session data post failed, will allow retry on next end-page render.", error);
+        state.sessionData.sessionDataPosted = false;
+        storage.setSessionData(state.sessionData);
+      });
+    }
+
     storage.setCurrentScreen("end");
     this.pushHistoryState("end");
     renderEndPage(this);
@@ -436,6 +464,15 @@ window.app = {
     };
     storage.setFeedbackSubmission(state.feedbackSubmission);
 
+    if (typeof window.recordFeedback === "function") {
+      window.recordFeedback({
+        difficulty: feedbackSession.difficultyScale,
+        motivation: feedbackSession.motivationScale,
+        strategies: feedbackSession.strategies,
+        feedbackText: feedbackSession.feedback
+      });
+    }
+
     this.showEndPage();
   },
 
@@ -483,6 +520,8 @@ window.app = {
 
   handleConsentAccept() {
     state.consentData = "Accepted";
+    state.sessionData.pages.consent.decision = "Accepted";
+    window.persistSessionData && window.persistSessionData();
     this.showInstructionsPage();
 
     console.log("Consent:", state.consentData);
@@ -490,6 +529,8 @@ window.app = {
 
   handleConsentDeny() {
     state.consentData = "Denied";
+    state.sessionData.pages.consent.decision = "Denied";
+    window.persistSessionData && window.persistSessionData();
     this.showEndPage();
 
     console.log("Consent:", state.consentData);
@@ -607,6 +648,7 @@ window.app = {
     corpusService.preloadCorpus();
 
     this.initializeParticipantId();
+    this.initializeSessionData();
     this.restoreScreen();
     this.setupHistoryGuard();
   }
