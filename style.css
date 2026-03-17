@@ -222,6 +222,48 @@ body {
   flex-wrap: wrap;
 }
 
+.confidence-bar-wrap {
+  margin-top: 12px;
+}
+
+.confidence-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.confidence-bar-track {
+  width: 100%;
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+}
+
+.confidence-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+.fill-truthful {
+  background: #3b82f6;
+}
+
+.fill-deceptive {
+  background: #ef4444;
+}
+
+.confidence-bar-pct {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 4px;
+  text-align: right;
+}
+
 .feedback-panel {
   margin-top: 16px;
 }

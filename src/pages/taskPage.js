@@ -14,6 +14,14 @@ window.renderTaskPage = function renderTaskPage(app) {
           The AI now classifies your rewrite as <strong>${taskSession.latestPrediction.labelStr.toUpperCase()}</strong>
           with a confidence score of <strong>${taskSession.latestPrediction.confidence.toFixed(2)}%</strong>.
         </p>
+        <div class="confidence-bar-wrap">
+          <div class="confidence-bar-track">
+            <div class="confidence-bar-fill ${taskSession.latestPrediction.label === 1 ? "fill-truthful" : "fill-deceptive"}"
+              style="width: ${taskSession.latestPrediction.confidence.toFixed(1)}%">
+            </div>
+          </div>
+          <div class="confidence-bar-pct">${taskSession.latestPrediction.confidence.toFixed(1)}% confident</div>
+        </div>
       </div>
     `
     : "";
@@ -47,6 +55,8 @@ window.renderTaskPage = function renderTaskPage(app) {
   appRoot.innerHTML = `
     <h1 class="title">Main Task</h1>
 
+    ${statusMarkup}
+
     <div class="task-panel">
       <h2 class="task-panel-title">Original statement</h2>
       <p class="task-statement">${utils.escapeHtml(taskSession.originalText)}</p>
@@ -59,6 +69,14 @@ window.renderTaskPage = function renderTaskPage(app) {
           The AI classifies this statement as <strong>${taskSession.originalPrediction.labelStr.toUpperCase()}</strong>.
         </p>
         <p class="task-summary">Confidence score: <strong>${taskSession.originalPrediction.confidence.toFixed(2)}%</strong></p>
+        <div class="confidence-bar-wrap">
+          <div class="confidence-bar-track">
+            <div class="confidence-bar-fill ${taskSession.originalPrediction.label === 1 ? "fill-truthful" : "fill-deceptive"}"
+              style="width: ${taskSession.originalPrediction.confidence.toFixed(1)}%">
+            </div>
+          </div>
+          <div class="confidence-bar-pct">${taskSession.originalPrediction.confidence.toFixed(1)}% confident</div>
+        </div>
       </div>
 
       <div class="task-panel">
@@ -80,8 +98,6 @@ window.renderTaskPage = function renderTaskPage(app) {
       ${submitButtonMarkup}
       ${continueButtonMarkup}
     </div>
-
-    ${statusMarkup}
   `;
 
   if (!taskSession.isComplete) {

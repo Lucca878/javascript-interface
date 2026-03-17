@@ -121,6 +121,18 @@ describe("app core", function () {
     expect(document.getElementById("strategiesInput").value).toContain("narrative style");
     expect(document.getElementById("feedbackInput").value).toBe("Smooth flow.");
   });
+
+  it("restores the end page when the stored screen is end", function () {
+    spyOn(app, "getProlificIdFromUrl").and.returnValue(null);
+    storage.setParticipantId("stored-001");
+    storage.setCurrentScreen("end");
+
+    app.init();
+
+    expect(document.getElementById("app").textContent).toContain("End of Study");
+    expect(document.getElementById("app").textContent).toContain("Thank you for participating in our study");
+  });
+
   it("stores the current screen and pushes history when showing the consent page", function () {
     spyOn(app, "pushHistoryState");
     testHelpers.mountAppContainer();
@@ -162,6 +174,27 @@ describe("app core", function () {
     expect(storage.getCurrentScreen()).toBe("task");
     expect(app.pushHistoryState).toHaveBeenCalledWith("task");
   });
+
+  it("stores the current screen and pushes history when showing the feedback page", function () {
+    spyOn(app, "pushHistoryState");
+    testHelpers.mountAppContainer();
+
+    app.showFeedbackPage();
+
+    expect(storage.getCurrentScreen()).toBe("feedback");
+    expect(app.pushHistoryState).toHaveBeenCalledWith("feedback");
+  });
+
+  it("stores the current screen and pushes history when showing the end page", function () {
+    spyOn(app, "pushHistoryState");
+    testHelpers.mountAppContainer();
+
+    app.showEndPage();
+
+    expect(storage.getCurrentScreen()).toBe("end");
+    expect(app.pushHistoryState).toHaveBeenCalledWith("end");
+  });
+
   it("restores the stored screen when popstate is handled", function () {
     storage.setCurrentScreen("instructions");
     spyOn(app, "restoreScreen");

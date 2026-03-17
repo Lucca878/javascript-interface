@@ -27,17 +27,19 @@ describe("feedback page", function () {
   });
 
   it("accepts strategies when the trimmed value is not empty", function () {
+    spyOn(app, "showEndPage");
     document.getElementById("motivationScaleInput").dispatchEvent(new Event("input"));
     document.getElementById("difficultyScaleInput").dispatchEvent(new Event("input"));
     document.getElementById("strategiesInput").value = "   clear strategy with spaces   ";
 
     app.handleFeedbackSubmit();
 
-    expect(document.getElementById("app").textContent).toContain("Thank you for your feedback.");
+    expect(app.showEndPage).toHaveBeenCalled();
     expect(state.feedbackSubmission.strategies).toBe("   clear strategy with spaces   ");
   });
 
   it("allows optional feedback to remain empty", function () {
+    spyOn(app, "showEndPage");
     document.getElementById("motivationScaleInput").value = "7";
     document.getElementById("motivationScaleInput").dispatchEvent(new Event("input"));
     document.getElementById("difficultyScaleInput").value = "3";
@@ -47,7 +49,7 @@ describe("feedback page", function () {
 
     app.handleFeedbackSubmit();
 
-    expect(document.getElementById("app").textContent).toContain("Thank you for your feedback.");
+    expect(app.showEndPage).toHaveBeenCalled();
     expect(state.feedbackSubmission.feedback).toBe("");
   });
 
@@ -86,6 +88,7 @@ describe("feedback page", function () {
   });
 
   it("stores feedback submission payload on valid submit", function () {
+    spyOn(app, "showEndPage");
     document.getElementById("motivationScaleInput").value = "9";
     document.getElementById("motivationScaleInput").dispatchEvent(new Event("input"));
     document.getElementById("difficultyScaleInput").value = "4";
@@ -95,7 +98,7 @@ describe("feedback page", function () {
 
     app.handleFeedbackSubmit();
 
-    expect(document.getElementById("app").textContent).toContain("Thank you for your feedback.");
+    expect(app.showEndPage).toHaveBeenCalled();
     expect(state.feedbackSession.submitted).toBeTrue();
     expect(state.feedbackSubmission.pid).toBe("pid-123");
     expect(state.feedbackSubmission.motivation_scale).toBe(9);
@@ -117,6 +120,7 @@ describe("feedback page", function () {
   });
 
   it("accepts slider value 5 when user explicitly confirms it", function () {
+    spyOn(app, "showEndPage");
     document.getElementById("motivationScaleInput").value = "5";
     document.getElementById("motivationScaleInput").dispatchEvent(new Event("input"));
     document.getElementById("difficultyScaleInput").value = "5";
@@ -125,7 +129,7 @@ describe("feedback page", function () {
 
     app.handleFeedbackSubmit();
 
-    expect(document.getElementById("app").textContent).toContain("Thank you for your feedback.");
+    expect(app.showEndPage).toHaveBeenCalled();
     expect(state.feedbackSubmission.motivation_scale).toBe(5);
     expect(state.feedbackSubmission.difficulty_scale).toBe(5);
   });

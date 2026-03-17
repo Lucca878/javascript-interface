@@ -23,10 +23,12 @@ describe("consent page", function () {
     expect(document.getElementById("instructionsNextButton")).not.toBeNull();
   });
 
-  it("sets consentData to Denied when Deny is clicked", function () {
+  it("sets consentData to Denied and opens the end page when Deny is clicked", function () {
+    spyOn(app, "showEndPage");
     document.getElementById("denyButton").click();
 
     expect(state.consentData).toBe("Denied");
+    expect(app.showEndPage).toHaveBeenCalled();
   });
   it("scrolls to the top when the consent page is rendered", function () {
     spyOn(utils, "scrollToTop");

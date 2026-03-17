@@ -196,4 +196,22 @@ describe("task page", function () {
 
     expect(utils.scrollToTop).toHaveBeenCalled();
   });
+
+  it("renders a blue fill-truthful bar for the original prediction when label is 1", function () {
+    // originalPrediction.label = 1 (truthful) — set in beforeEach
+    const fill = document.querySelector(".confidence-bar-fill.fill-truthful");
+    expect(fill).not.toBeNull();
+  });
+
+  it("renders a red fill-deceptive bar for the latest rewrite prediction when label is 0", async function () {
+    spyOn(modelService, "getPrediction").and.returnValue({ label: 0, labelStr: "deceptive", confidence: 72.5 });
+    document.getElementById("taskRewriteInput").value =
+      "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+
+    await app.handleTaskSubmit();
+
+    const fills = document.querySelectorAll(".confidence-bar-fill");
+    const deceptiveFill = Array.from(fills).find(el => el.classList.contains("fill-deceptive"));
+    expect(deceptiveFill).not.toBeNull();
+  });
 });

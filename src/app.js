@@ -44,6 +44,35 @@ window.app = {
     window.history.replaceState({ screen: screenName }, "", window.location.href);
   },
 
+  trackScreenTransition(nextScreen) {
+    const currentScreen = storage.getCurrentScreen();
+
+    if (
+      currentScreen &&
+      currentScreen !== nextScreen &&
+      typeof window.recordPageExit === "function"
+    ) {
+      window.recordPageExit(currentScreen);
+    }
+
+    this.ensurePageEnter(nextScreen);
+  },
+
+  ensurePageEnter(screenName) {
+    if (typeof window.recordPageEnter !== "function") {
+      return;
+    }
+
+    const pageState =
+      state.sessionData && state.sessionData.pages
+        ? state.sessionData.pages[screenName]
+        : null;
+
+    if (!pageState || !pageState.enterTime) {
+      window.recordPageEnter(screenName);
+    }
+  },
+
   handlePopState() {
     const currentScreen = storage.getCurrentScreen() || "welcome";
     this.replaceHistoryState(currentScreen);
@@ -59,21 +88,31 @@ window.app = {
   },
 
   showWelcomePage() {
+    this.trackScreenTransition("welcome");
     storage.setCurrentScreen("welcome");
     this.pushHistoryState("welcome");
     renderWelcomePage(this);
   },
 
   showConsentPage() {
+    this.trackScreenTransition("consent");
     storage.setCurrentScreen("consent");
     this.pushHistoryState("consent");
     renderConsentPage(this);
   },
 
   showInstructionsPage() {
+    this.trackScreenTransition("instructions");
     storage.setCurrentScreen("instructions");
     this.pushHistoryState("instructions");
     renderInstructionsPage(this);
+  },
+
+  showEndPage() {
+    this.trackScreenTransition("end");
+    storage.setCurrentScreen("end");
+    this.pushHistoryState("end");
+    renderEndPage(this);
   },
 
   renderTaskLoadingState() {
@@ -303,6 +342,7 @@ window.app = {
       return;
     }
 
+    this.trackScreenTransition("task");
     storage.setCurrentScreen("task");
     this.pushHistoryState("task");
     this.resolveTaskSessionAndRender();
@@ -310,6 +350,7 @@ window.app = {
 
   showFeedbackPage() {
     this.ensureFeedbackSession();
+    this.trackScreenTransition("feedback");
     storage.setCurrentScreen("feedback");
     this.pushHistoryState("feedback");
     renderFeedbackPage(this);
@@ -395,19 +436,27 @@ window.app = {
     };
     storage.setFeedbackSubmission(state.feedbackSubmission);
 
-    renderFeedbackPage(this);
+    this.showEndPage();
   },
 
   restoreScreen() {
     const storedScreen = storage.getCurrentScreen();
 
+    if (storedScreen === "end") {
+      this.ensurePageEnter("end");
+      renderEndPage(this);
+      return;
+    }
+
     if (storedScreen === "feedback") {
       this.ensureFeedbackSession();
+      this.ensurePageEnter("feedback");
       renderFeedbackPage(this);
       return;
     }
 
     if (storedScreen === "task") {
+      this.ensurePageEnter("task");
       if (this.hasPendingCorpusLoadWithoutTaskSession()) {
         this.waitForCorpusAndRenderTask(false);
         return;
@@ -417,15 +466,18 @@ window.app = {
     }
 
     if (storedScreen === "instructions") {
+      this.ensurePageEnter("instructions");
       renderInstructionsPage(this);
       return;
     }
 
     if (storedScreen === "consent") {
+      this.ensurePageEnter("consent");
       renderConsentPage(this);
       return;
     }
 
+    this.ensurePageEnter("welcome");
     renderWelcomePage(this);
   },
 
@@ -438,11 +490,7 @@ window.app = {
 
   handleConsentDeny() {
     state.consentData = "Denied";
-
-    const messageBox = document.getElementById("messageBox");
-    messageBox.textContent =
-      "Consent denied. Next step placeholder: this will later open the end page.";
-    messageBox.classList.add("show");
+    this.showEndPage();
 
     console.log("Consent:", state.consentData);
   },
@@ -512,6 +560,10 @@ window.app = {
       return;
     }
 
+    if (typeof window.recordRewriteAttempt === "function") {
+      window.recordRewriteAttempt(rewriteText, latestPrediction.label, latestPrediction.confidence);
+    }
+
     taskSession.attemptsUsed += 1;
     taskSession.lastRewrite = rewriteText;
     taskSession.draftText = "";
@@ -526,7 +578,7 @@ window.app = {
       taskSession.statusType = "warning";
       taskSession.isComplete = true;
     } else {
-      taskSession.statusMessage = "Placeholder feedback state: the prediction did not flip yet, so the participant can try another rewrite.";
+      taskSession.statusMessage = "The prediction did not flip yet, please try another rewrite.";
       taskSession.isComplete = false;
     }
 
