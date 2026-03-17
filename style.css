@@ -218,6 +218,16 @@ body {
 
 .task-actions {
   justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.feedback-panel {
+  margin-top: 16px;
+}
+
+.feedback-range {
+  width: 100%;
 }
 
 @media (max-width: 720px) {

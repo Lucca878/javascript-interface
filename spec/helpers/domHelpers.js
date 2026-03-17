@@ -11,11 +11,14 @@ window.testHelpers = {
 
   resetAppState() {
     sessionStorage.clear();
+    localStorage.clear();
 
     if (window.state) {
       state.participantId = null;
       state.consentData = null;
       state.taskSession = null;
+      state.feedbackSession = null;
+      state.feedbackSubmission = null;
     }
 
     if (window.corpusService) {

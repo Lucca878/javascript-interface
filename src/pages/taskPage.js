@@ -21,6 +21,28 @@ window.renderTaskPage = function renderTaskPage(app) {
   const statusMarkup = taskSession.statusMessage
     ? `<div class="message show ${taskSession.statusType === "warning" ? "message-warning" : ""}">${utils.escapeHtml(taskSession.statusMessage)}</div>`
     : '<div class="message" id="messageBox"></div>';
+  const continueButtonMarkup = taskSession.isComplete
+    ? '<button class="button" id="taskContinueButton">Continue to Feedback</button>'
+    : "";
+  const rewriteControlsMarkup = taskSession.isComplete
+    ? ""
+    : `
+    <label class="task-label" for="taskRewriteInput">Write your rewrite below</label>
+    <textarea
+      id="taskRewriteInput"
+      class="task-textarea"
+      rows="8"
+      placeholder="${utils.escapeHtml(taskSession.lastRewrite || taskSession.originalText)}"
+    >${utils.escapeHtml(taskSession.draftText || "")}</textarea>
+
+    <div class="task-meta">
+      <span>Attempts remaining: ${taskSession.maxAttempts - taskSession.attemptsUsed}</span>
+      <span>Statement index: ${utils.escapeHtml(taskSession.statementId)}</span>
+    </div>
+    `;
+  const submitButtonMarkup = taskSession.isComplete
+    ? ""
+    : '<button class="button" id="taskSubmitButton">Submit rewrite</button>';
 
   appRoot.innerHTML = `
     <h1 class="title">Main Task</h1>
@@ -52,27 +74,25 @@ window.renderTaskPage = function renderTaskPage(app) {
 
     ${latestPredictionMarkup}
 
-    <label class="task-label" for="taskRewriteInput">Write your rewrite below</label>
-    <textarea
-      id="taskRewriteInput"
-      class="task-textarea"
-      rows="8"
-      placeholder="${utils.escapeHtml(taskSession.lastRewrite || taskSession.originalText)}"
-    >${utils.escapeHtml(taskSession.draftText || "")}</textarea>
-
-    <div class="task-meta">
-      <span>Attempts remaining: ${taskSession.maxAttempts - taskSession.attemptsUsed}</span>
-      <span>Statement index: ${utils.escapeHtml(taskSession.statementId)}</span>
-    </div>
+    ${rewriteControlsMarkup}
 
     <div class="actions task-actions">
-      <button class="button" id="taskSubmitButton">Submit rewrite</button>
+      ${submitButtonMarkup}
+      ${continueButtonMarkup}
     </div>
 
     ${statusMarkup}
   `;
 
-  document
-    .getElementById("taskSubmitButton")
-    .addEventListener("click", () => app.handleTaskSubmit());
+  if (!taskSession.isComplete) {
+    document
+      .getElementById("taskSubmitButton")
+      .addEventListener("click", () => app.handleTaskSubmit());
+  }
+
+  if (taskSession.isComplete) {
+    document
+      .getElementById("taskContinueButton")
+      .addEventListener("click", () => app.handleTaskContinueToFeedback());
+  }
 };

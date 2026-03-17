@@ -88,6 +88,39 @@ describe("app core", function () {
     expect(document.getElementById("app").textContent).toContain("Main Task");
     expect(document.getElementById("taskSubmitButton")).not.toBeNull();
   });
+
+  it("restores the feedback page when the stored screen is feedback", function () {
+    spyOn(app, "getProlificIdFromUrl").and.returnValue(null);
+    storage.setParticipantId("stored-001");
+    storage.setCurrentScreen("feedback");
+
+    app.init();
+
+    expect(document.getElementById("app").textContent).toContain("Feedback");
+    expect(document.getElementById("submitFeedbackButton")).not.toBeNull();
+  });
+
+  it("restores stored feedback values when returning to the feedback page", function () {
+    spyOn(app, "getProlificIdFromUrl").and.returnValue(null);
+    storage.setParticipantId("stored-001");
+    storage.setCurrentScreen("feedback");
+    storage.setFeedbackSession({
+      motivationScale: 4,
+      difficultyScale: 8,
+      strategies: "I altered narrative style and structure.",
+      feedback: "Smooth flow.",
+      statusMessage: "",
+      statusType: "info",
+      submitted: false
+    });
+
+    app.init();
+
+    expect(document.getElementById("motivationScaleInput").value).toBe("4");
+    expect(document.getElementById("difficultyScaleInput").value).toBe("8");
+    expect(document.getElementById("strategiesInput").value).toContain("narrative style");
+    expect(document.getElementById("feedbackInput").value).toBe("Smooth flow.");
+  });
   it("stores the current screen and pushes history when showing the consent page", function () {
     spyOn(app, "pushHistoryState");
     testHelpers.mountAppContainer();

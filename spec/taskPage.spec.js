@@ -90,6 +90,23 @@ describe("task page", function () {
     expect(document.getElementById("app").textContent).toContain("flipped");
   });
 
+  it("shows a continue button to feedback when task is complete", async function () {
+    spyOn(modelService, "getPrediction").and.returnValue({ label: 0, labelStr: "deceptive", confidence: 72.5 });
+    document.getElementById("taskRewriteInput").value = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+
+    await app.handleTaskSubmit();
+
+    expect(document.getElementById("taskContinueButton")).not.toBeNull();
+
+    document.getElementById("taskContinueButton").click();
+    expect(document.getElementById("app").textContent).toContain("Feedback");
+  });
+
+  it("does not show a continue button before the task is complete", function () {
+    expect(state.taskSession.isComplete).not.toBeTrue();
+    expect(document.getElementById("taskContinueButton")).toBeNull();
+  });
+
   it("shows an end-of-attempts message when the last attempt does not flip the prediction", async function () {
     state.taskSession.attemptsUsed = 9;
     // Same label as original (1 = truthful) → no flip
@@ -99,7 +116,11 @@ describe("task page", function () {
     await app.handleTaskSubmit();
 
     expect(state.taskSession.attemptsUsed).toBe(10);
-    expect(document.getElementById("app").textContent).toContain("maximum number of rewrites");
+    expect(document.getElementById("app").textContent).toContain("maximum number of attempts");
+    expect(document.getElementById("app").textContent).toContain("Latest rewrite feedback");
+    expect(document.getElementById("taskContinueButton")).not.toBeNull();
+    expect(document.getElementById("taskRewriteInput")).toBeNull();
+    expect(document.getElementById("taskSubmitButton")).toBeNull();
   });
 
   it("accepts a rewrite that is exactly 20 words longer than the original", async function () {

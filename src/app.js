@@ -180,6 +180,7 @@ window.app = {
           originalPrediction,
           attemptsUsed: 0,
           maxAttempts: 10,
+          isComplete: false,
           lastRewrite: "",
           draftText: "",
           latestPrediction: null,
@@ -201,6 +202,7 @@ window.app = {
       originalPrediction,
       attemptsUsed: 0,
       maxAttempts: 10,
+      isComplete: false,
       lastRewrite: "",
       draftText: "",
       latestPrediction: null,
@@ -306,8 +308,104 @@ window.app = {
     this.resolveTaskSessionAndRender();
   },
 
+  showFeedbackPage() {
+    this.ensureFeedbackSession();
+    storage.setCurrentScreen("feedback");
+    this.pushHistoryState("feedback");
+    renderFeedbackPage(this);
+  },
+
+  getDefaultFeedbackSession() {
+    return {
+      motivationScale: 5,
+      difficultyScale: 5,
+      motivationAnswered: false,
+      difficultyAnswered: false,
+      strategies: "",
+      feedback: "",
+      statusMessage: "",
+      statusType: "info",
+      submitted: false
+    };
+  },
+
+  ensureFeedbackSession() {
+    if (state.feedbackSession) {
+      return state.feedbackSession;
+    }
+
+    const storedFeedbackSession = storage.getFeedbackSession();
+
+    if (storedFeedbackSession) {
+      state.feedbackSession = {
+        ...this.getDefaultFeedbackSession(),
+        ...storedFeedbackSession
+      };
+      storage.setFeedbackSession(state.feedbackSession);
+      return state.feedbackSession;
+    }
+
+    state.feedbackSession = this.getDefaultFeedbackSession();
+    storage.setFeedbackSession(state.feedbackSession);
+    return state.feedbackSession;
+  },
+
+  updateFeedbackSessionField(fieldName, value) {
+    const feedbackSession = this.ensureFeedbackSession();
+    feedbackSession[fieldName] = value;
+    storage.setFeedbackSession(feedbackSession);
+  },
+
+  handleFeedbackSubmit() {
+    const feedbackSession = this.ensureFeedbackSession();
+    const strategiesInput = document.getElementById("strategiesInput");
+    const feedbackInput = document.getElementById("feedbackInput");
+    const motivationScaleInput = document.getElementById("motivationScaleInput");
+    const difficultyScaleInput = document.getElementById("difficultyScaleInput");
+
+    feedbackSession.motivationScale = Number(motivationScaleInput.value);
+    feedbackSession.difficultyScale = Number(difficultyScaleInput.value);
+    feedbackSession.strategies = strategiesInput.value;
+    feedbackSession.feedback = feedbackInput.value;
+
+    if (
+      !feedbackSession.strategies.trim() ||
+      !feedbackSession.motivationAnswered ||
+      !feedbackSession.difficultyAnswered
+    ) {
+      feedbackSession.statusMessage = "Please answer all required questions before submitting.";
+      feedbackSession.statusType = "warning";
+      storage.setFeedbackSession(feedbackSession);
+      renderFeedbackPage(this);
+      return;
+    }
+
+    feedbackSession.statusMessage = "Thank you for your feedback.";
+    feedbackSession.statusType = "info";
+    feedbackSession.submitted = true;
+    storage.setFeedbackSession(feedbackSession);
+
+    state.feedbackSubmission = {
+      pid: state.participantId,
+      motivation_scale: feedbackSession.motivationScale,
+      difficulty_scale: feedbackSession.difficultyScale,
+      strategies: feedbackSession.strategies,
+      feedback: feedbackSession.feedback,
+      submittedAt: new Date().toISOString()
+    };
+    storage.setFeedbackSubmission(state.feedbackSubmission);
+
+    renderFeedbackPage(this);
+  },
+
   restoreScreen() {
     const storedScreen = storage.getCurrentScreen();
+
+    if (storedScreen === "feedback") {
+      this.ensureFeedbackSession();
+      renderFeedbackPage(this);
+      return;
+    }
 
     if (storedScreen === "task") {
       if (this.hasPendingCorpusLoadWithoutTaskSession()) {
@@ -357,6 +455,15 @@ window.app = {
 
   async handleTaskSubmit() {
     const taskSession = state.taskSession;
+
+    if (taskSession.isComplete) {
+      taskSession.statusMessage = "Task is complete. Continue to the feedback page.";
+      taskSession.statusType = "info";
+      storage.setTaskSession(taskSession);
+      renderTaskPage(this);
+      return;
+    }
+
     const rewriteInput = document.getElementById("taskRewriteInput");
     const rewriteText = rewriteInput.value.trim();
 
@@ -412,16 +519,29 @@ window.app = {
     taskSession.statusType = "info";
 
     if (latestPrediction.label !== taskSession.originalPrediction.label) {
-      taskSession.statusMessage = "Placeholder success state: the rewrite flipped the model prediction.";
+      taskSession.statusMessage = "Success! You flipped the model prediction. Please continue to the feedback page.";
+      taskSession.isComplete = true;
     } else if (taskSession.attemptsUsed >= taskSession.maxAttempts) {
-      taskSession.statusMessage = "Placeholder end-of-attempts state: you reached the maximum number of rewrites for this statement.";
+      taskSession.statusMessage = "You have reached the maximum number of attempts for this statement. Please continue to the feedback page.";
       taskSession.statusType = "warning";
+      taskSession.isComplete = true;
     } else {
       taskSession.statusMessage = "Placeholder feedback state: the prediction did not flip yet, so the participant can try another rewrite.";
+      taskSession.isComplete = false;
     }
 
     storage.setTaskSession(taskSession);
     renderTaskPage(this);
+  },
+
+  handleTaskContinueToFeedback() {
+    const taskSession = state.taskSession;
+
+    if (!taskSession || !taskSession.isComplete) {
+      return;
+    }
+
+    this.showFeedbackPage();
   },
 
   init() {
