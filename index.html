@@ -23,13 +23,20 @@
     const defaultModelEndpoint =
       runningLocally
         ? "http://127.0.0.1:8080/predict"
-        : "";
+        : "https://model-backend-302671925464.europe-west4.run.app/predict";
+
+    const defaultParticipantDataEndpoint =
+      runningLocally && window.location.port !== "8000"
+        ? "http://127.0.0.1:8000/api/participantData.php"
+        : "api/participantData.php";
 
     window.APP_CONFIG = {
       // Example: "api/statements.php" or "/backend/get_statements.php"
       corpusPhpEndpoint: defaultCorpusEndpoint,
       // Example local backend endpoint for FastAPI model service
-      modelApiEndpoint: defaultModelEndpoint
+      modelApiEndpoint: defaultModelEndpoint,
+      // Endpoint used to persist participant session records
+      participantDataEndpoint: defaultParticipantDataEndpoint
     };
   </script>
 

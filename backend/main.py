@@ -63,6 +63,7 @@ app.add_middleware(
 		"http://localhost:8000",
 		"http://127.0.0.1:5500",
 		"http://localhost:5500",
+		"https://model-backend-302671925464.europe-west4.run.app",
 	],
 	allow_credentials=False,
 	allow_methods=["*"],

@@ -26,6 +26,7 @@ This project uses two backend components:
 - Optional Python model backend (`backend/main.py`):
 	- `POST /predict` for model predictions
 	- Used by the UI when `window.APP_CONFIG.modelApiEndpoint` is set
+	- Can run locally on `127.0.0.1:8080` or on Cloud Run
 	- If no model endpoint is set, frontend falls back to deterministic local prediction logic
 
 ## Repository Structure
@@ -79,6 +80,33 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8080
 
 By default, local frontend config points model requests to `http://127.0.0.1:8080/predict`.
 
+### 3) Optional: use Live Server for frontend work
+
+If you prefer Live Server on `localhost:5500`, keep the PHP server running on `localhost:8000`.
+
+The app is configured so that while running on Live Server:
+
+- statement corpus requests go to `http://127.0.0.1:8000/api/statements.php`
+- participant session exports go to `http://127.0.0.1:8000/api/participantData.php`
+- model predictions still default to local FastAPI at `http://127.0.0.1:8080/predict`
+
+## Production Model API
+
+The current Cloud Run model endpoint is:
+
+```text
+https://model-backend-302671925464.europe-west4.run.app/predict
+```
+
+The frontend automatically uses this URL when not running on `localhost`/`127.0.0.1`.
+
+For local testing against Cloud Run, override the model endpoint in the browser console:
+
+```js
+window.APP_CONFIG.modelApiEndpoint = "https://model-backend-302671925464.europe-west4.run.app/predict";
+console.log("Model endpoint:", window.APP_CONFIG.modelApiEndpoint);
+```
+
 ## Data Collected Per Session
 
 - `sessionId`, `prolificId`, start/end timestamps, total duration
@@ -98,6 +126,38 @@ By default, local frontend config points model requests to `http://127.0.0.1:808
 	- aggregate CSV row: `data/exports/sessions.csv`
 - CSV append is deduplicated by `session_id`
 - On successful post, frontend clears `sessionData` from local storage
+- After a successful post, the frontend also creates a fresh in-memory session so the next run gets a new `sessionId`
+
+## Clean Test Run
+
+For a clean end-to-end run with new timing data and a new CSV row:
+
+1. Open the app.
+2. In browser console, run:
+
+```js
+localStorage.clear();
+sessionStorage.clear();
+location.reload();
+```
+
+3. If you want predictions from Cloud Run instead of local FastAPI, run:
+
+```js
+window.APP_CONFIG.modelApiEndpoint = "https://model-backend-302671925464.europe-west4.run.app/predict";
+console.log("Model endpoint:", window.APP_CONFIG.modelApiEndpoint);
+```
+
+4. Complete the study flow.
+5. Verify the final `POST` to `api/participantData.php` returns:
+
+```json
+{
+	"success": true,
+	"csvUpdated": true,
+	"duplicateSession": false
+}
+```
 
 ## End-to-End Check
 
@@ -119,6 +179,7 @@ If hosting the full interface on a live server:
 	- `data/exports/`
 - Keep these output folders out of git (already configured in `.gitignore`).
 - If using Python model API in production, set `window.APP_CONFIG.modelApiEndpoint` to your hosted `/predict` URL and configure CORS as needed.
+- The current backend CORS config allows localhost development origins and the deployed Cloud Run origin.
 
 ## Troubleshooting
 
@@ -133,10 +194,12 @@ If hosting the full interface on a live server:
 	- Confirm code reads `PROLIFIC_PID` (not `PROLIFIC_ID`).
 - Model prediction request fails:
 	- If running local model API, confirm `uvicorn` is running on `http://127.0.0.1:8080`.
+	- If testing Cloud Run locally, confirm the request URL in browser Network tab ends with `run.app/predict`.
 	- If not using model API, leave `modelApiEndpoint` empty to use frontend fallback predictions.
 - No session JSON/CSV output:
 	- Confirm `api/participantData.php` is reachable from the app host.
 	- Confirm server can write to `data/sessions/` and `data/exports/`.
+	- If `duplicateSession` is true, the backend received the request but skipped CSV append because that `sessionId` already exists.
 
 ## License
 

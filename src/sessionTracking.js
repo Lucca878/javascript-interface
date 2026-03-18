@@ -137,8 +137,13 @@ window.recordSessionEnd = function() {
 window.postSessionData = function() {
   console.log('[Session] Posting session data to backend...');
   console.log(JSON.stringify(state.sessionData, null, 2));
+
+  const endpoint =
+    window.APP_CONFIG && window.APP_CONFIG.participantDataEndpoint
+      ? window.APP_CONFIG.participantDataEndpoint
+      : '/api/participantData.php';
   
-  return fetch('/api/participantData.php', {
+  return fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(state.sessionData)
@@ -152,6 +157,10 @@ window.postSessionData = function() {
     .then(data => {
       console.log('[Session] Session data posted successfully:', data);
       storage.clearSessionData();
+      if (typeof window.createSessionData === 'function') {
+        // Start a fresh session for any subsequent run without requiring a hard refresh.
+        state.sessionData = window.createSessionData();
+      }
       return data;
     })
     .catch(error => {

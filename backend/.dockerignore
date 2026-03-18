@@ -1,0 +1,19 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Tooling and OS clutter
+.DS_Store
+.git/
+.gitignore
+
+# Local test artifacts
+.pytest_cache/
+.mypy_cache/
+.coverage

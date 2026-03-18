@@ -1,5 +1,7 @@
 # Backend API
 
+FastAPI service for deception-classifier inference.
+
 ## Run locally
 
 ```bash
@@ -10,10 +12,65 @@ pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8080 # starting server
 ```
 
+Local API URL:
+
+```text
+http://127.0.0.1:8080
+```
+
 ## Endpoints
 
 - `GET /health`
 - `POST /predict`
+
+Quick check:
+
+```bash
+curl http://127.0.0.1:8080/health
+curl -X POST http://127.0.0.1:8080/predict \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"The Eiffel Tower is in Paris."}'
+```
+
+## Cloud Run deployment
+
+Current deployed service:
+
+```text
+https://model-backend-302671925464.europe-west4.run.app
+```
+
+Health endpoint:
+
+```text
+https://model-backend-302671925464.europe-west4.run.app/health
+```
+
+Predict endpoint:
+
+```text
+https://model-backend-302671925464.europe-west4.run.app/predict
+```
+
+Typical deploy command used for this project:
+
+```bash
+gcloud run deploy model-backend \
+  --source ./backend \
+  --allow-unauthenticated \
+  --min-instances 0 \
+  --max-instances 1 \
+  --cpu 1 \
+  --memory 1Gi \
+  --concurrency 1 \
+  --timeout 120
+```
+
+Current defaults were configured for low-cost testing:
+
+- region: `europe-west4`
+- scales to zero when idle
+- single-instance cap
 
 ## Real model loading
 
@@ -33,6 +90,12 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8080
 ```
 
 `GET /health` reports whether real inference is active.
+
+For the deployed Cloud Run service, a healthy response should show:
+
+- `status: ok`
+- `real_inference_enabled: true`
+- `model_load_error: null`
 
 ## Label normalization rule
 
@@ -67,10 +130,22 @@ is mapped to study label `1` (truthful).
   "request_id": "req-1"
 }
 ```
+
+## Environment notes
+
+- CORS currently allows localhost development origins on ports `8000` and `5500`
+- CORS also allows the deployed Cloud Run origin
+- The service runs on CPU (`INFERENCE_DEVICE=cpu`) in production
+
 ## Activate venv
+
+```bash
 cd /Users/luccapfrunder/Desktop/javascript-interface/backend
 source .venv/bin/activate
+```
 
-### Deactivate 
+Deactivate with:
 
+```bash
 deactivate
+```

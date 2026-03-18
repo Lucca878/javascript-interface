@@ -13,15 +13,8 @@ function getProlificId() {
   return params.get('PROLIFIC_PID') || 'unknown';
 }
 
-window.state = {
-  participantId: null,
-  consentData: null,
-  taskSession: null,
-  feedbackSession: null,
-  feedbackSubmission: null,
-  
-  // Session-wide data for comprehensive tracking
-  sessionData: {
+window.createSessionData = function() {
+  return {
     sessionId: generateUUID(),
     prolificId: getProlificId(),
     sessionStartTime: new Date().toISOString(),
@@ -35,5 +28,16 @@ window.state = {
       end: { enterTime: null, exitTime: null, duration: null }
     },
     totalDuration: null
-  }
+  };
+};
+
+window.state = {
+  participantId: null,
+  consentData: null,
+  taskSession: null,
+  feedbackSession: null,
+  feedbackSubmission: null,
+  
+  // Session-wide data for comprehensive tracking
+  sessionData: window.createSessionData()
 };
