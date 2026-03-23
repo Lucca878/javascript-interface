@@ -10,6 +10,7 @@ Thumbs.db
 
 # Dependencies
 node_modules/
+vendor/
 
 # Logs
 *.log
@@ -25,3 +26,6 @@ backend/models/
 # Participant data - never commit
 data/sessions/
 data/exports/
+
+# GCS service account key - never commit
+gcs-credentials.json

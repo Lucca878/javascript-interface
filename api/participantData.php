@@ -1,11 +1,16 @@
 <?php
 declare(strict_types=1);
 
+require __DIR__ . '/../vendor/autoload.php';
+
+use Google\Cloud\Storage\StorageClient;
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
+const GCS_BUCKET       = 'paraphrasing-attacks-data-euw4';
 const CSV_MAX_ATTEMPTS = 10;
 
 function scalarToString($value): string
@@ -82,58 +87,15 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 	return $row;
 }
 
-function appendSessionCsvRow(string $csvPath, array $row): array
+function buildCsvString(array $row): string
 {
-	$handle = fopen($csvPath, 'c+');
-	if ($handle === false) {
-		throw new RuntimeException('Could not open CSV file for writing.');
-	}
-
-	$updated = false;
-	$duplicate = false;
-
-	try {
-		if (!flock($handle, LOCK_EX)) {
-			throw new RuntimeException('Could not lock CSV file.');
-		}
-
-		rewind($handle);
-		$header = fgetcsv($handle, 0, ',', '"', '\\');
-
-		if ($header === false) {
-			$header = array_keys($row);
-			fputcsv($handle, $header, ',', '"', '\\');
-		}
-
-		$sessionIdIndex = array_search('session_id', $header, true);
-		if ($sessionIdIndex === false) {
-			throw new RuntimeException('CSV header missing session_id column.');
-		}
-
-		while (($existing = fgetcsv($handle, 0, ',', '"', '\\')) !== false) {
-			if (isset($existing[$sessionIdIndex]) && (string) $existing[$sessionIdIndex] === (string) $row['session_id']) {
-				$duplicate = true;
-				break;
-			}
-		}
-
-		if (!$duplicate) {
-			fseek($handle, 0, SEEK_END);
-			$ordered = [];
-			foreach ($header as $column) {
-				$ordered[] = $row[$column] ?? '';
-			}
-			fputcsv($handle, $ordered, ',', '"', '\\');
-			$updated = true;
-		}
-
-		fflush($handle);
-		flock($handle, LOCK_UN);
-	} finally {
-		fclose($handle);
-	}
-
-	return ['updated' => $updated, 'duplicate' => $duplicate];
+	$handle = fopen('php://temp', 'r+');
+	fputcsv($handle, array_keys($row), ',', '"', '\\');
+	fputcsv($handle, array_values($row), ',', '"', '\\');
+	rewind($handle);
+	$csv = stream_get_contents($handle);
+	fclose($handle);
+	return $csv;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -161,7 +123,7 @@ if (!is_array($payload)) {
 	exit;
 }
 
-$sessionId = isset($payload['sessionId']) ? trim((string) $payload['sessionId']) : '';
+$sessionId  = isset($payload['sessionId'])  ? trim((string) $payload['sessionId'])  : '';
 $prolificId = isset($payload['prolificId']) ? trim((string) $payload['prolificId']) : '';
 
 if ($sessionId === '' || $prolificId === '') {
@@ -172,7 +134,7 @@ if ($sessionId === '' || $prolificId === '') {
 	exit;
 }
 
-$safeSessionId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $sessionId);
+$safeSessionId  = preg_replace('/[^a-zA-Z0-9_-]/', '_', $sessionId);
 $safeProlificId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $prolificId);
 
 if ($safeSessionId === null || $safeProlificId === null) {
@@ -181,20 +143,12 @@ if ($safeSessionId === null || $safeProlificId === null) {
 	exit;
 }
 
-$sessionsDir = __DIR__ . '/../data/sessions';
-if (!is_dir($sessionsDir) && !mkdir($sessionsDir, 0775, true) && !is_dir($sessionsDir)) {
-	http_response_code(500);
-	echo json_encode(['error' => 'Failed to create data directory.']);
-	exit;
-}
-
 $receivedAt = gmdate('c');
-$fileName = $safeProlificId . '_' . $safeSessionId . '.json';
-$filePath = $sessionsDir . '/' . $fileName;
+$fileName   = $safeProlificId . '_' . $safeSessionId;
 
 $document = [
 	'receivedAt' => $receivedAt,
-	'payload' => $payload,
+	'payload'    => $payload,
 ];
 
 $encoded = json_encode($document, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -204,36 +158,33 @@ if ($encoded === false) {
 	exit;
 }
 
-$bytesWritten = file_put_contents($filePath, $encoded . PHP_EOL, LOCK_EX);
-if ($bytesWritten === false) {
-	http_response_code(500);
-	echo json_encode(['error' => 'Failed to persist session data.']);
-	exit;
-}
+$csvRow    = buildSessionCsvRow($payload, $receivedAt);
+$csvString = buildCsvString($csvRow);
 
-$exportsDir = __DIR__ . '/../data/exports';
-if (!is_dir($exportsDir) && !mkdir($exportsDir, 0775, true) && !is_dir($exportsDir)) {
-	http_response_code(500);
-	echo json_encode(['error' => 'Failed to create exports directory.']);
-	exit;
-}
-
-$csvPath = $exportsDir . '/sessions.csv';
-$csvRow = buildSessionCsvRow($payload, $receivedAt);
+$jsonObjectName = 'sessions/' . $fileName . '.json';
+$csvObjectName  = 'csv-rows/' . $fileName . '.csv';
+$duplicateSession = false;
 
 try {
-	$csvResult = appendSessionCsvRow($csvPath, $csvRow);
-} catch (RuntimeException $e) {
+	$storage = new StorageClient(['keyFilePath' => __DIR__ . '/../gcs-credentials.json']);
+	$bucket  = $storage->bucket(GCS_BUCKET);
+
+	$duplicateSession = $bucket->object($jsonObjectName)->exists();
+
+	if (!$duplicateSession) {
+		$bucket->upload($encoded . PHP_EOL, ['name' => $jsonObjectName]);
+		$bucket->upload($csvString,         ['name' => $csvObjectName]);
+	}
+} catch (\Exception $e) {
 	http_response_code(500);
-	echo json_encode(['error' => 'Failed to append CSV row.', 'details' => $e->getMessage()]);
+	echo json_encode(['error' => 'Failed to persist session data.', 'details' => $e->getMessage()]);
 	exit;
 }
 
 echo json_encode([
-	'success' => true,
-	'file' => 'data/sessions/' . $fileName,
-	'bytesWritten' => $bytesWritten,
-	'csvFile' => 'data/exports/sessions.csv',
-	'csvUpdated' => $csvResult['updated'],
-	'duplicateSession' => $csvResult['duplicate'],
+	'success'          => true,
+	'file'             => $jsonObjectName,
+	'csvFile'          => $csvObjectName,
+	'csvUpdated'       => !$duplicateSession,
+	'duplicateSession' => $duplicateSession,
 ]);

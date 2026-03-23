@@ -90,6 +90,23 @@ The app is configured so that while running on Live Server:
 - participant session exports go to `http://127.0.0.1:8000/api/participantData.php`
 - model predictions still default to local FastAPI at `http://127.0.0.1:8080/predict`
 
+## Exporting Participant Data
+
+All session data is stored in Google Cloud Storage bucket `paraphrasing-attacks-data-euw4`:
+
+- `sessions/<prolific_id>_<session_id>.json` — full session document per participant
+- `csv-rows/<prolific_id>_<session_id>.csv` — one CSV row per participant (header + data)
+
+To merge all rows into a single analysis-ready CSV:
+
+```bash
+gsutil cat "gs://paraphrasing-attacks-data-euw4/csv-rows/*.csv" \
+  | awk 'NR==1 || !/^session_id/' \
+  > all_sessions.csv
+```
+
+This prints the header once (from the first file) and appends only data rows from the rest.
+
 ## Production Model API
 
 The current Cloud Run model endpoint is:
