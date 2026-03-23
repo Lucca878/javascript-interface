@@ -226,6 +226,137 @@ If hosting the full interface on a live server:
 - If using Python model API in production, set `window.APP_CONFIG.modelApiEndpoint` to your hosted `/predict` URL and configure CORS as needed.
 - The current backend CORS config allows localhost development origins and the deployed Cloud Run origin.
 
+## Deployment (Hetzner + Cloud Run)
+
+This project is deployed using:
+
+- **Frontend**: Hetzner VPS (Nginx + PHP)
+- **Backend**: Google Cloud Run (FastAPI)
+
+---
+
+## 1. Deploy frontend to Hetzner
+
+### 1.1 SSH into the server
+```bash
+ssh root@157.90.127.76
+```
+
+### 1.2 Install dependencies
+```bash
+apt update && apt upgrade -y
+apt install -y nginx php8.3-fpm php8.3-curl php8.3-mbstring php8.3-xml php8.3-zip unzip git curl
+```
+
+Install Composer:
+```bash
+curl -sS https://getcomposer.org/installer | php
+mv composer.phar /usr/local/bin/composer
+```
+
+### 1.3 Clone repository
+```bash
+cd /var/www
+git clone https://github.com/Lucca878/javascript-interface study
+cd /var/www/study
+```
+
+### 1.4 Install PHP dependencies
+```bash
+composer install --no-dev
+```
+
+### 1.5 Configure Nginx
+
+Open config:
+```bash
+nano /etc/nginx/sites-available/study
+```
+
+Paste:
+```nginx
+server {
+    listen 80;
+    server_name _;
+    root /var/www/study;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~ ^/api/.*\.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+    }
+}
+```
+
+Save and exit:
+
+- `Ctrl + O`, Enter
+- `Ctrl + X`
+
+### 1.6 Enable site
+```bash
+ln -sf /etc/nginx/sites-available/study /etc/nginx/sites-enabled/study
+rm -f /etc/nginx/sites-enabled/default
+```
+
+### 1.7 Test and reload Nginx
+```bash
+nginx -t
+systemctl reload nginx
+```
+
+### 1.8 Set permissions
+```bash
+chown -R www-data:www-data /var/www/study
+find /var/www/study -type d -exec chmod 755 {} \;
+find /var/www/study -type f -exec chmod 644 {} \;
+chmod 600 /var/www/study/gcs-credentials.json
+chown www-data:www-data /var/www/study/gcs-credentials.json
+```
+
+### 1.9 Access the app
+```
+http://157.90.127.76
+```
+
+---
+
+## 2. Update frontend after changes
+```bash
+ssh root@157.90.127.76
+cd /var/www/study
+git pull
+composer install --no-dev
+systemctl reload nginx
+```
+
+## 2. Backend (Cloud Run)
+
+The backend is deployed on Google Cloud Run:
+```
+https://model-backend-302671925464.europe-west4.run.app
+```
+
+### 2.1 Redeploy the backend
+
+After making backend changes such as CORS updates:
+```bash
+cd backend
+gcloud run deploy model-backend \
+  --source . \
+  --region europe-west4 \
+  --allow-unauthenticated
+```
+
+> **Notes:**
+> - Run this inside the `backend` folder
+> - Use `--source .` because the current directory is already `backend`
+> - Redeploying updates the existing service and keeps the same URL
+
 ## Troubleshooting
 
 - `Address already in use` when starting PHP:
