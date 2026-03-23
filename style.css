@@ -270,17 +270,21 @@ body {
 
 .feedback-range {
   width: 100%;
-  accent-color: var(--primary); /* fallback for other elements */
   -webkit-appearance: none;
   appearance: none;
   height: 6px;
-  background: var(--primary);
   border-radius: 4px;
   outline: none;
   cursor: pointer;
+  background: linear-gradient(
+    to right,
+    var(--primary) 0%,
+    var(--primary) var(--fill),
+    #ddd var(--fill),
+    #ddd 100%
+  );
 }
 
-/* Chrome, Safari, Edge */
 .feedback-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -291,7 +295,6 @@ body {
   cursor: pointer;
 }
 
-/* Firefox */
 .feedback-range::-moz-range-thumb {
   width: 18px;
   height: 18px;

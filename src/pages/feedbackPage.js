@@ -57,11 +57,17 @@ window.renderFeedbackPage = function renderFeedbackPage(app) {
     </div>
   `;
 
+  const motivationSlider = document.getElementById("motivationScaleInput");
+  const difficultySlider = document.getElementById("difficultyScaleInput");
+  utils.updateSliderFill(motivationSlider);
+  utils.updateSliderFill(difficultySlider);
+  
   document.getElementById("motivationScaleInput").addEventListener("input", function (event) {
     const nextValue = Number(event.target.value);
     document.getElementById("motivationScaleValue").textContent = String(nextValue);
     app.updateFeedbackSessionField("motivationScale", nextValue);
     app.updateFeedbackSessionField("motivationAnswered", true);
+    utils.updateSliderFill(this);
   });
 
   document.getElementById("difficultyScaleInput").addEventListener("input", function (event) {
@@ -69,6 +75,7 @@ window.renderFeedbackPage = function renderFeedbackPage(app) {
     document.getElementById("difficultyScaleValue").textContent = String(nextValue);
     app.updateFeedbackSessionField("difficultyScale", nextValue);
     app.updateFeedbackSessionField("difficultyAnswered", true);
+    utils.updateSliderFill(this);
   });
 
   document.getElementById("strategiesInput").addEventListener("input", function (event) {
