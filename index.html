@@ -20,10 +20,7 @@
         ? "http://127.0.0.1:8000/api/statements.php"
         : "api/statements.php";
 
-    const defaultModelEndpoint =
-      runningLocally
-        ? "http://127.0.0.1:8080/predict"
-        : "https://model-backend-302671925464.europe-west4.run.app/predict";
+    const defaultModelEndpoint = "https://model-backend-302671925464.europe-west4.run.app/predict";
 
     const defaultParticipantDataEndpoint =
       runningLocally && window.location.port !== "8000"

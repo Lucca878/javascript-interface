@@ -270,6 +270,7 @@ body {
 
 .feedback-range {
   width: 100%;
+  accent-color: var(--primary);
 }
 
 @media (max-width: 720px) {

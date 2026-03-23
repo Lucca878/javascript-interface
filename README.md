@@ -97,15 +97,43 @@ All session data is stored in Google Cloud Storage bucket `paraphrasing-attacks-
 - `sessions/<prolific_id>_<session_id>.json` — full session document per participant
 - `csv-rows/<prolific_id>_<session_id>.csv` — one CSV row per participant (header + data)
 
-To merge all rows into a single analysis-ready CSV:
+### Verifying data was stored
+
+List all objects in the bucket to confirm sessions have been saved:
 
 ```bash
-gsutil cat "gs://paraphrasing-attacks-data-euw4/csv-rows/*.csv" \
-  | awk 'NR==1 || !/^session_id/' \
-  > all_sessions.csv
+gcloud storage ls gs://paraphrasing-attacks-data-euw4/ --recursive
 ```
 
-This prints the header once (from the first file) and appends only data rows from the rest.
+You should see entries like:
+```
+gs://paraphrasing-attacks-data-euw4/csv-rows/<prolific_id>_<session_id>.csv
+gs://paraphrasing-attacks-data-euw4/sessions/<prolific_id>_<session_id>.json
+```
+
+To inspect a specific session's CSV:
+```bash
+gcloud storage cat "gs://paraphrasing-attacks-data-euw4/csv-rows/<prolific_id>_<session_id>.csv"
+```
+
+To inspect a specific session's full JSON:
+```bash
+gcloud storage cat "gs://paraphrasing-attacks-data-euw4/sessions/<prolific_id>_<session_id>.json"
+```
+
+### Exporting the full combined CSV to your Desktop
+
+Run this command in your terminal to merge all participants' rows into a single CSV saved directly to your Desktop:
+
+```bash
+gcloud storage cat "gs://paraphrasing-attacks-data-euw4/csv-rows/*.csv" \
+  | awk 'NR==1 || !/^session_id/' \
+  > ~/Desktop/all_sessions.csv
+```
+
+This prints the header once (from the first file) and appends only data rows from the rest. The file will appear on your Desktop as `all_sessions.csv`, ready to open in Excel or any spreadsheet tool.
+
+> **Note:** `~/Desktop/` resolves to `/Users/<your-username>/Desktop/` on macOS.
 
 ## Production Model API
 
