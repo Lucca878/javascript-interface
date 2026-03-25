@@ -65,6 +65,8 @@ app.add_middleware(
         "http://localhost:5500",
         "https://model-backend-302671925464.europe-west4.run.app",
         "http://157.90.127.76",
+        "https://lpstudies.net",
+        "https://www.lpstudies.net",
     ],
     allow_credentials=False,
     allow_methods=["*"],

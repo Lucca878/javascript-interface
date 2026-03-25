@@ -1,6 +1,13 @@
 window.renderWelcomePage = function renderWelcomePage(app) {
   utils.scrollToTop();
 
+  // Pre-warm the model backend so the cold-start completes before the task page.
+  const warmupEndpoint = modelService.getApiEndpoint();
+  if (warmupEndpoint) {
+    const healthUrl = warmupEndpoint.replace(/\/predict\/?$/, "/health");
+    fetch(healthUrl).catch(() => {});
+  }
+
   const appRoot = document.getElementById("app");
 
   appRoot.innerHTML = `
