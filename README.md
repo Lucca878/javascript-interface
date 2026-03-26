@@ -393,11 +393,18 @@ sudo -u postgres psql -d study -c "SELECT csv_row_json->>'total_duration_ms' FRO
 Run these from your **local terminal** (not on the server):
 
 ```bash
+# One-time setup on server (creates the results_csv view for short exports)
+ssh root@157.90.127.76 "sudo -u postgres psql -d study -f /var/www/study/api/sql/results_csv_view.sql"
+
+# Preferred short CSV export (uses results_csv view with header row)
+ssh root@157.90.127.76 "sudo -u postgres psql -d study -c \"\\copy (SELECT * FROM results_csv ORDER BY received_at) TO STDOUT WITH CSV HEADER\"" > ~/Desktop/all_sessions.csv
+
+# Full JSON export (one payload per line)
+ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -c \"SELECT payload_json::text FROM results ORDER BY received_at;\"" > ~/Desktop/all_sessions.ndjson
+
+# Legacy explicit-column CSV export (kept for compatibility)
 # Export all sessions as CSV to Desktop
 ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -F',' -c \"SELECT csv_row_json->>'session_id',csv_row_json->>'prolific_id',csv_row_json->>'session_start',csv_row_json->>'session_end',csv_row_json->>'total_duration_ms',csv_row_json->>'consent_decision',csv_row_json->>'statement_id',csv_row_json->>'original_text',csv_row_json->>'original_label',csv_row_json->>'original_confidence',csv_row_json->>'attempts_used',csv_row_json->>'max_attempts',csv_row_json->>'rewrite1_text',csv_row_json->>'rewrite1_label',csv_row_json->>'rewrite1_confidence',csv_row_json->>'rewrite1_duration_ms',csv_row_json->>'rewrite2_text',csv_row_json->>'rewrite2_label',csv_row_json->>'rewrite2_confidence',csv_row_json->>'rewrite2_duration_ms',csv_row_json->>'rewrite3_text',csv_row_json->>'rewrite3_label',csv_row_json->>'rewrite3_confidence',csv_row_json->>'rewrite3_duration_ms',csv_row_json->>'rewrite4_text',csv_row_json->>'rewrite4_label',csv_row_json->>'rewrite4_confidence',csv_row_json->>'rewrite4_duration_ms',csv_row_json->>'rewrite5_text',csv_row_json->>'rewrite5_label',csv_row_json->>'rewrite5_confidence',csv_row_json->>'rewrite5_duration_ms',csv_row_json->>'rewrite6_text',csv_row_json->>'rewrite6_label',csv_row_json->>'rewrite6_confidence',csv_row_json->>'rewrite6_duration_ms',csv_row_json->>'rewrite7_text',csv_row_json->>'rewrite7_label',csv_row_json->>'rewrite7_confidence',csv_row_json->>'rewrite7_duration_ms',csv_row_json->>'rewrite8_text',csv_row_json->>'rewrite8_label',csv_row_json->>'rewrite8_confidence',csv_row_json->>'rewrite8_duration_ms',csv_row_json->>'rewrite9_text',csv_row_json->>'rewrite9_label',csv_row_json->>'rewrite9_confidence',csv_row_json->>'rewrite9_duration_ms',csv_row_json->>'rewrite10_text',csv_row_json->>'rewrite10_label',csv_row_json->>'rewrite10_confidence',csv_row_json->>'rewrite10_duration_ms',csv_row_json->>'difficulty',csv_row_json->>'motivation',csv_row_json->>'strategies',csv_row_json->>'feedback_text',csv_row_json->>'received_at' FROM results ORDER BY received_at;\"" > ~/Desktop/all_sessions.csv
-
-# Export all full payload JSON rows as NDJSON (one JSON object per line)
-ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -c \"SELECT payload_json::text FROM results ORDER BY received_at;\"" > ~/Desktop/all_sessions.ndjson
 
 # Export one participant's sessions as CSV
 ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -F',' -c \"SELECT csv_row_json->>'session_id', csv_row_json->>'prolific_id', csv_row_json->>'received_at' FROM results WHERE prolific_id = '<prolific_id>' ORDER BY received_at;\"" > ~/Desktop/participant_sessions.csv
