@@ -42,6 +42,14 @@ window.renderTaskPage = function renderTaskPage(app) {
                   Model feedback: <strong>${utils.escapeHtml(String(attempt.labelStr || "unknown")).toUpperCase()}</strong>
                   at <strong>${Number(attempt.confidence || 0).toFixed(2)}%</strong> confidence.
                 </p>
+                <div class="confidence-bar-wrap">
+                  <div class="confidence-bar-track">
+                    <div class="confidence-bar-fill ${attempt.label === 1 ? "fill-truthful" : "fill-deceptive"}"
+                      style="width: ${Number(attempt.confidence || 0).toFixed(1)}%">
+                    </div>
+                  </div>
+                  <div class="confidence-bar-pct">${Number(attempt.confidence || 0).toFixed(1)}% confident</div>
+                </div>
               </article>
             `).join("")}
           </div>
@@ -114,9 +122,9 @@ window.renderTaskPage = function renderTaskPage(app) {
       </div>
     </div>
 
-    ${latestPredictionMarkup}
-
     ${previousAttemptsMarkup}
+
+    ${latestPredictionMarkup}
 
     ${rewriteControlsMarkup}
 
