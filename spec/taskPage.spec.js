@@ -10,6 +10,7 @@ describe("task page", function () {
       maxAttempts: 10,
       lastRewrite: "",
       draftText: "",
+      rewriteHistory: [],
       latestPrediction: null,
       statusMessage: "",
       statusType: "info"
@@ -213,5 +214,61 @@ describe("task page", function () {
     const fills = document.querySelectorAll(".confidence-bar-fill");
     const deceptiveFill = Array.from(fills).find(el => el.classList.contains("fill-deceptive"));
     expect(deceptiveFill).not.toBeNull();
+  });
+
+  it("stores successful submissions in rewrite history", async function () {
+    spyOn(modelService, "getPrediction").and.returnValues(
+      { label: 1, labelStr: "truthful", confidence: 80.0 },
+      { label: 1, labelStr: "truthful", confidence: 76.5 }
+    );
+
+    const firstRewrite = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+    const secondRewrite = "I traveled by train to Rotterdam and met a friend by the river, then we shared coffee downtown.";
+
+    document.getElementById("taskRewriteInput").value = firstRewrite;
+    await app.handleTaskSubmit();
+
+    document.getElementById("taskRewriteInput").value = secondRewrite;
+    await app.handleTaskSubmit();
+
+    expect(state.taskSession.rewriteHistory.length).toBe(2);
+    expect(state.taskSession.rewriteHistory[0].attemptNumber).toBe(1);
+    expect(state.taskSession.rewriteHistory[0].rewriteText).toBe(firstRewrite);
+    expect(state.taskSession.rewriteHistory[1].attemptNumber).toBe(2);
+    expect(state.taskSession.rewriteHistory[1].rewriteText).toBe(secondRewrite);
+  });
+
+  it("renders previous rewrites in a collapsed history section", async function () {
+    spyOn(modelService, "getPrediction").and.returnValues(
+      { label: 1, labelStr: "truthful", confidence: 80.0 },
+      { label: 1, labelStr: "truthful", confidence: 76.5 }
+    );
+
+    const firstRewrite = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+    const secondRewrite = "I traveled by train to Rotterdam and met a friend by the river, then we shared coffee downtown.";
+
+    document.getElementById("taskRewriteInput").value = firstRewrite;
+    await app.handleTaskSubmit();
+
+    document.getElementById("taskRewriteInput").value = secondRewrite;
+    await app.handleTaskSubmit();
+
+    expect(document.querySelector(".history-summary").textContent).toContain("See previous rewrites (1)");
+    expect(document.querySelector(".history-item").textContent).toContain("Attempt 1");
+    expect(document.querySelector(".history-item").textContent).toContain(firstRewrite);
+    expect(document.getElementById("app").textContent).toContain("Latest rewrite feedback");
+  });
+
+  it("does not render previous rewrites history when there is only one attempt", async function () {
+    spyOn(modelService, "getPrediction").and.returnValue({ label: 1, labelStr: "truthful", confidence: 80.0 });
+
+    document.getElementById("taskRewriteInput").value =
+      "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+
+    await app.handleTaskSubmit();
+
+    expect(state.taskSession.rewriteHistory.length).toBe(1);
+    expect(document.querySelector(".history-summary")).toBeNull();
+    expect(document.getElementById("app").textContent).toContain("Latest rewrite feedback");
   });
 });

@@ -250,6 +250,7 @@ window.app = {
           isComplete: false,
           lastRewrite: "",
           draftText: "",
+          rewriteHistory: [],
           latestPrediction: null,
           statusMessage: "",
           statusType: "info"
@@ -272,6 +273,7 @@ window.app = {
       isComplete: false,
       lastRewrite: "",
       draftText: "",
+      rewriteHistory: [],
       latestPrediction: null,
       statusMessage: "",
       statusType: "info"
@@ -312,6 +314,11 @@ window.app = {
       }
 
       state.taskSession = storedTaskSession;
+
+      if (!Array.isArray(state.taskSession.rewriteHistory)) {
+        state.taskSession.rewriteHistory = [];
+      }
+
       return true;
     }
 
@@ -609,6 +616,19 @@ window.app = {
     taskSession.lastRewrite = rewriteText;
     taskSession.draftText = "";
     taskSession.latestPrediction = latestPrediction;
+
+    if (!Array.isArray(taskSession.rewriteHistory)) {
+      taskSession.rewriteHistory = [];
+    }
+
+    taskSession.rewriteHistory.push({
+      attemptNumber: taskSession.attemptsUsed,
+      rewriteText,
+      label: latestPrediction.label,
+      labelStr: latestPrediction.labelStr,
+      confidence: latestPrediction.confidence
+    });
+
     taskSession.statusType = "info";
 
     if (latestPrediction.label !== taskSession.originalPrediction.label) {

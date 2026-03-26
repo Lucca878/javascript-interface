@@ -292,6 +292,26 @@ describe("app core", function () {
     expect(state.taskSession.corpusSource).toBe("php");
   });
 
+  it("initializes rewriteHistory when restoring an older stored task session", function () {
+    storage.setTaskSession({
+      statementId: "legacy-1",
+      originalText: "Legacy task statement.",
+      corpusSource: "placeholder",
+      originalPrediction: { label: 1, labelStr: "truthful", confidence: 75 },
+      attemptsUsed: 1,
+      maxAttempts: 10,
+      lastRewrite: "Legacy rewrite",
+      latestPrediction: { label: 1, labelStr: "truthful", confidence: 70 },
+      statusMessage: "",
+      statusType: "info"
+    });
+
+    app.ensureTaskSession();
+
+    expect(Array.isArray(state.taskSession.rewriteHistory)).toBeTrue();
+    expect(state.taskSession.rewriteHistory.length).toBe(0);
+  });
+
   it("uses configured corpus endpoint and preloads corpus on init", function () {
     const previousConfig = window.APP_CONFIG;
     window.APP_CONFIG = { corpusPhpEndpoint: "api/custom-statements.php" };

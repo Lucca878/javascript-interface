@@ -5,6 +5,8 @@ window.renderTaskPage = function renderTaskPage(app) {
   const taskSession = state.taskSession;
   const targetLabel = taskSession.originalPrediction.label === 1 ? "deceptive" : "truthful";
   const originalWordCount = app.countWords(taskSession.originalText);
+  const rewriteHistory = Array.isArray(taskSession.rewriteHistory) ? taskSession.rewriteHistory : [];
+  const previousAttempts = rewriteHistory.slice(0, -1).reverse();
   const latestPredictionMarkup = taskSession.latestPrediction
     ? `
       <div class="task-panel">
@@ -22,6 +24,28 @@ window.renderTaskPage = function renderTaskPage(app) {
           </div>
           <div class="confidence-bar-pct">${taskSession.latestPrediction.confidence.toFixed(1)}% confident</div>
         </div>
+      </div>
+    `
+    : "";
+
+  const previousAttemptsMarkup = previousAttempts.length
+    ? `
+      <div class="task-panel history-panel">
+        <details class="history-details">
+          <summary class="history-summary">See previous rewrites (${previousAttempts.length})</summary>
+          <div class="history-list">
+            ${previousAttempts.map((attempt) => `
+              <article class="history-item">
+                <h3 class="history-item-title">Attempt ${attempt.attemptNumber}</h3>
+                <p class="task-summary"><strong>Rewrite:</strong> ${utils.escapeHtml(attempt.rewriteText)}</p>
+                <p class="task-summary">
+                  Model feedback: <strong>${utils.escapeHtml(String(attempt.labelStr || "unknown")).toUpperCase()}</strong>
+                  at <strong>${Number(attempt.confidence || 0).toFixed(2)}%</strong> confidence.
+                </p>
+              </article>
+            `).join("")}
+          </div>
+        </details>
       </div>
     `
     : "";
@@ -91,6 +115,8 @@ window.renderTaskPage = function renderTaskPage(app) {
     </div>
 
     ${latestPredictionMarkup}
+
+    ${previousAttemptsMarkup}
 
     ${rewriteControlsMarkup}
 
