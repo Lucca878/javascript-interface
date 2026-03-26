@@ -152,7 +152,7 @@ Install required packages:
 
 ```bash
 apt update && apt upgrade -y
-apt install -y nginx php8.3-fpm php8.3-curl php8.3-mbstring php8.3-xml php8.3-zip unzip git curl certbot python3-certbot-nginx composer
+apt install -y nginx php8.3-fpm php8.3-curl php8.3-mbstring php8.3-xml php8.3-zip php8.3-pgsql unzip git curl certbot python3-certbot-nginx composer postgresql postgresql-contrib
 ```
 
 Clone repository:
@@ -307,36 +307,61 @@ console.log(window.APP_CONFIG);
 
 Session data is sent from frontend to `api/participantData.php`.
 
-Current persistence paths:
+Current persistence behavior:
 
-- `data/sessions/<prolific_id>_<session_id>.json`
-- `data/exports/sessions.csv`
+- Primary write target: PostgreSQL (`results` table)
+- Fallback write target: GCloud object storage (`sessions/*.json` and `csv-rows/*.csv`)
 
-CSV append is deduplicated by `session_id`.
+Storage backend is controlled by environment variables for `api/participantData.php`:
 
-## Data Retrieval (Hetzner)
+```bash
+export STORAGE_BACKEND=postgres
+export STORAGE_FALLBACK_BACKEND=gcloud
 
-Data is stored on the Hetzner server under `/var/www/study/data/`.
+export POSTGRES_HOST=127.0.0.1
+export POSTGRES_PORT=5432
+export POSTGRES_DB=study
+export POSTGRES_USER=study_app
+export POSTGRES_PASSWORD='<STRONG_PASSWORD>'
+export POSTGRES_SSLMODE=prefer
+
+export GCS_BUCKET=paraphrasing-attacks-data-euw4
+export GCS_CREDENTIALS_PATH=/var/www/study/gcs-credentials.json
+```
+
+Create schema once:
+
+```bash
+sudo -u postgres psql -d study -f /var/www/study/api/sql/postgres_schema.sql
+```
+
+GCloud object naming remains unchanged for compatibility:
+
+- `sessions/<prolific_id>_<session_id>.json`
+- `csv-rows/<prolific_id>_<session_id>.csv`
+
+Deduplication is enforced by SQL unique key on `session_id`.
+
+## Data Retrieval (PostgreSQL on Hetzner)
+
+Data is stored in PostgreSQL (`results`).
 
 ## 1) Inspect data on server
 
 ```bash
 ssh root@157.90.127.76
-cd /var/www/study
-ls -la data/sessions | tail -n 20
-ls -la data/exports
-wc -l data/exports/sessions.csv
+sudo -u postgres psql -d study -c "SELECT COUNT(*) FROM results;"
+sudo -u postgres psql -d study -c "SELECT session_id, prolific_id, received_at FROM results ORDER BY received_at DESC LIMIT 20;"
 ```
 
 ## 2) View latest records
 
 ```bash
-# Last 5 CSV rows
-tail -n 5 /var/www/study/data/exports/sessions.csv
+# Last 5 rows as CSV-compatible columns
+sudo -u postgres psql -d study -c "SELECT (csv_row_json->>'session_id') AS session_id, (csv_row_json->>'prolific_id') AS prolific_id, (csv_row_json->>'received_at') AS received_at FROM results ORDER BY received_at DESC LIMIT 5;"
 
-# Inspect one JSON session file
-ls -t /var/www/study/data/sessions | head -n 1
-cat "/var/www/study/data/sessions/<filename>.json"
+# Inspect one full JSON payload
+sudo -u postgres psql -d study -c "SELECT payload_json FROM results WHERE session_id = '<session_id>';"
 ```
 
 ## 3) Download data to local machine
@@ -344,11 +369,11 @@ cat "/var/www/study/data/sessions/<filename>.json"
 From local terminal:
 
 ```bash
-# Download aggregate CSV
-scp root@157.90.127.76:/var/www/study/data/exports/sessions.csv ~/Desktop/sessions.csv
+# Export all sessions CSV from sql
+ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -F',' -c \"SELECT csv_row_json->>'session_id',csv_row_json->>'prolific_id',csv_row_json->>'session_start',csv_row_json->>'session_end',csv_row_json->>'total_duration_ms',csv_row_json->>'consent_decision',csv_row_json->>'statement_id',csv_row_json->>'original_text',csv_row_json->>'original_label',csv_row_json->>'original_confidence',csv_row_json->>'attempts_used',csv_row_json->>'max_attempts',csv_row_json->>'rewrite1_text',csv_row_json->>'rewrite1_label',csv_row_json->>'rewrite1_confidence',csv_row_json->>'rewrite1_duration_ms',csv_row_json->>'rewrite2_text',csv_row_json->>'rewrite2_label',csv_row_json->>'rewrite2_confidence',csv_row_json->>'rewrite2_duration_ms',csv_row_json->>'rewrite3_text',csv_row_json->>'rewrite3_label',csv_row_json->>'rewrite3_confidence',csv_row_json->>'rewrite3_duration_ms',csv_row_json->>'rewrite4_text',csv_row_json->>'rewrite4_label',csv_row_json->>'rewrite4_confidence',csv_row_json->>'rewrite4_duration_ms',csv_row_json->>'rewrite5_text',csv_row_json->>'rewrite5_label',csv_row_json->>'rewrite5_confidence',csv_row_json->>'rewrite5_duration_ms',csv_row_json->>'rewrite6_text',csv_row_json->>'rewrite6_label',csv_row_json->>'rewrite6_confidence',csv_row_json->>'rewrite6_duration_ms',csv_row_json->>'rewrite7_text',csv_row_json->>'rewrite7_label',csv_row_json->>'rewrite7_confidence',csv_row_json->>'rewrite7_duration_ms',csv_row_json->>'rewrite8_text',csv_row_json->>'rewrite8_label',csv_row_json->>'rewrite8_confidence',csv_row_json->>'rewrite8_duration_ms',csv_row_json->>'rewrite9_text',csv_row_json->>'rewrite9_label',csv_row_json->>'rewrite9_confidence',csv_row_json->>'rewrite9_duration_ms',csv_row_json->>'rewrite10_text',csv_row_json->>'rewrite10_label',csv_row_json->>'rewrite10_confidence',csv_row_json->>'rewrite10_duration_ms',csv_row_json->>'difficulty',csv_row_json->>'motivation',csv_row_json->>'strategies',csv_row_json->>'feedback_text',csv_row_json->>'received_at' FROM results ORDER BY received_at;\"" > ~/Desktop/all_sessions.csv
 
-# Download all JSON session files
-scp -r root@157.90.127.76:/var/www/study/data/sessions ~/Desktop/sessions_json
+# Export all full payload JSON rows (NDJSON)
+ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -c \"SELECT payload_json::text FROM results ORDER BY received_at;\"" > ~/Desktop/all_sessions.ndjson
 ```
 
 ## 4) Create timestamped backup on server
@@ -688,7 +713,9 @@ systemctl reload nginx
   - Check `index.html` for `activeModelBackend` value.
   - Ensure latest code is deployed on server (`git pull`).
 - `api/participantData.php` not writing:
-  - Verify write permissions for `data/sessions/` and `data/exports/`.
+  - Verify PostgreSQL credentials/environment variables are set for PHP-FPM.
+  - Verify schema exists: `api/sql/postgres_schema.sql`.
+  - Check fallback mode (`STORAGE_FALLBACK_BACKEND=gcloud`) and `gcs-credentials.json`.
 - Port conflict on local dev (`Address already in use`):
   - Stop existing process or use another port.
 

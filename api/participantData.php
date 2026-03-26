@@ -10,8 +10,80 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-const GCS_BUCKET       = 'paraphrasing-attacks-data-euw4';
-const CSV_MAX_ATTEMPTS = 10;
+const DEFAULT_GCS_BUCKET = 'paraphrasing-attacks-data-euw4';
+const CSV_MAX_ATTEMPTS   = 10;
+
+function getEnvString(string $key, string $default = ''): string
+{
+	$value = getenv($key);
+	if ($value === false) {
+		return $default;
+	}
+
+	return trim((string) $value);
+}
+
+function getStorageBackend(): string
+{
+	$backend = strtolower(getEnvString('STORAGE_BACKEND', 'postgres'));
+
+	if (!in_array($backend, ['postgres', 'gcloud'], true)) {
+		return 'postgres';
+	}
+
+	return $backend;
+}
+
+function getFallbackStorageBackend(string $primary): string
+{
+	$fallback = strtolower(getEnvString('STORAGE_FALLBACK_BACKEND', 'gcloud'));
+
+	if (!in_array($fallback, ['none', 'postgres', 'gcloud'], true)) {
+		$fallback = 'none';
+	}
+
+	if ($fallback === $primary) {
+		return 'none';
+	}
+
+	return $fallback;
+}
+
+function getGcsBucketName(): string
+{
+	return getEnvString('GCS_BUCKET', DEFAULT_GCS_BUCKET);
+}
+
+function getGcsCredentialsPath(): string
+{
+	return getEnvString('GCS_CREDENTIALS_PATH', __DIR__ . '/../gcs-credentials.json');
+}
+
+function getPdoConnection(): PDO
+{
+	$dsn = getEnvString('POSTGRES_DSN', '');
+
+	if ($dsn === '') {
+		$host = getEnvString('POSTGRES_HOST', '127.0.0.1');
+		$port = getEnvString('POSTGRES_PORT', '5432');
+		$db   = getEnvString('POSTGRES_DB', 'study');
+		$ssl  = getEnvString('POSTGRES_SSLMODE', 'prefer');
+		$dsn  = sprintf('pgsql:host=%s;port=%s;dbname=%s;sslmode=%s', $host, $port, $db, $ssl);
+	}
+
+	$user = getEnvString('POSTGRES_USER', 'study_app');
+	$pass = getEnvString('POSTGRES_PASSWORD', '');
+
+	return new PDO(
+		$dsn,
+		$user,
+		$pass,
+		[
+			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+			PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+		]
+	);
+}
 
 function scalarToString($value): string
 {
@@ -98,6 +170,121 @@ function buildCsvString(array $row): string
 	return $csv;
 }
 
+/**
+ * @return array{duplicateSession: bool, backend: string}
+ */
+function persistToPostgres(
+	array $payload,
+	string $receivedAt,
+	string $jsonObjectName,
+	string $csvObjectName,
+	array $csvRow
+): array {
+	$pdo = getPdoConnection();
+	$pdo->beginTransaction();
+
+	$sessionId = (string) $payload['sessionId'];
+	$prolificId = (string) $payload['prolificId'];
+	$payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES);
+	$csvRowJson = json_encode($csvRow, JSON_UNESCAPED_SLASHES);
+
+	if ($payloadJson === false || $csvRowJson === false) {
+		throw new RuntimeException('Failed to encode JSON fields for PostgreSQL insert.');
+	}
+
+	$insert = $pdo->prepare(
+		'INSERT INTO results
+			(session_id, prolific_id, received_at, json_object_name, csv_object_name, payload_json, csv_row_json)
+		 VALUES
+			(:session_id, :prolific_id, CAST(:received_at AS timestamptz), :json_object_name, :csv_object_name, CAST(:payload_json AS jsonb), CAST(:csv_row_json AS jsonb))
+		 ON CONFLICT (session_id) DO NOTHING'
+	);
+
+	$insert->bindValue(':session_id', $sessionId);
+	$insert->bindValue(':prolific_id', $prolificId);
+	$insert->bindValue(':received_at', $receivedAt);
+	$insert->bindValue(':json_object_name', $jsonObjectName);
+	$insert->bindValue(':csv_object_name', $csvObjectName);
+	$insert->bindValue(':payload_json', $payloadJson);
+	$insert->bindValue(':csv_row_json', $csvRowJson);
+	$insert->execute();
+
+	$inserted = $insert->rowCount() > 0;
+	$pdo->commit();
+
+	return [
+		'duplicateSession' => !$inserted,
+		'backend' => 'postgres',
+	];
+}
+
+/**
+ * @return array{duplicateSession: bool, backend: string}
+ */
+function persistToGCloud(string $encoded, string $csvString, string $jsonObjectName, string $csvObjectName): array
+{
+	$storage = new StorageClient(['keyFilePath' => getGcsCredentialsPath()]);
+	$bucket  = $storage->bucket(getGcsBucketName());
+
+	$duplicateSession = $bucket->object($jsonObjectName)->exists();
+
+	if (!$duplicateSession) {
+		$bucket->upload($encoded . PHP_EOL, ['name' => $jsonObjectName]);
+		$bucket->upload($csvString,         ['name' => $csvObjectName]);
+	}
+
+	return [
+		'duplicateSession' => $duplicateSession,
+		'backend' => 'gcloud',
+	];
+}
+
+/**
+ * @return array{duplicateSession: bool, backend: string, fallbackUsed: bool}
+ */
+function persistWithConfiguredBackend(
+	string $primaryBackend,
+	string $fallbackBackend,
+	array $payload,
+	string $receivedAt,
+	string $encoded,
+	string $csvString,
+	string $jsonObjectName,
+	string $csvObjectName,
+	array $csvRow
+): array {
+	$backendsToTry = [$primaryBackend];
+	if ($fallbackBackend !== 'none') {
+		$backendsToTry[] = $fallbackBackend;
+	}
+
+	$lastError = null;
+
+	foreach ($backendsToTry as $index => $backend) {
+		try {
+			if ($backend === 'postgres') {
+				$result = persistToPostgres($payload, $receivedAt, $jsonObjectName, $csvObjectName, $csvRow);
+			} elseif ($backend === 'gcloud') {
+				$result = persistToGCloud($encoded, $csvString, $jsonObjectName, $csvObjectName);
+			} else {
+				throw new RuntimeException('Unsupported storage backend: ' . $backend);
+			}
+
+			return [
+				'duplicateSession' => $result['duplicateSession'],
+				'backend' => $result['backend'],
+				'fallbackUsed' => $index > 0,
+			];
+		} catch (\Throwable $e) {
+			$lastError = $e;
+		}
+	}
+
+	throw new RuntimeException(
+		'Failed to persist session data via all configured backends: ' . ($lastError ? $lastError->getMessage() : 'unknown error')
+	);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 	http_response_code(204);
 	exit;
@@ -164,18 +351,28 @@ $csvString = buildCsvString($csvRow);
 $jsonObjectName = 'sessions/' . $fileName . '.json';
 $csvObjectName  = 'csv-rows/' . $fileName . '.csv';
 $duplicateSession = false;
+$backendUsed = '';
+$fallbackUsed = false;
+$primaryBackend = getStorageBackend();
+$fallbackBackend = getFallbackStorageBackend($primaryBackend);
 
 try {
-	$storage = new StorageClient(['keyFilePath' => __DIR__ . '/../gcs-credentials.json']);
-	$bucket  = $storage->bucket(GCS_BUCKET);
+	$result = persistWithConfiguredBackend(
+		$primaryBackend,
+		$fallbackBackend,
+		$payload,
+		$receivedAt,
+		$encoded,
+		$csvString,
+		$jsonObjectName,
+		$csvObjectName,
+		$csvRow
+	);
 
-	$duplicateSession = $bucket->object($jsonObjectName)->exists();
-
-	if (!$duplicateSession) {
-		$bucket->upload($encoded . PHP_EOL, ['name' => $jsonObjectName]);
-		$bucket->upload($csvString,         ['name' => $csvObjectName]);
-	}
-} catch (\Exception $e) {
+	$duplicateSession = $result['duplicateSession'];
+	$backendUsed = $result['backend'];
+	$fallbackUsed = $result['fallbackUsed'];
+} catch (\Throwable $e) {
 	http_response_code(500);
 	echo json_encode(['error' => 'Failed to persist session data.', 'details' => $e->getMessage()]);
 	exit;
@@ -187,4 +384,7 @@ echo json_encode([
 	'csvFile'          => $csvObjectName,
 	'csvUpdated'       => !$duplicateSession,
 	'duplicateSession' => $duplicateSession,
+	'storageBackend'   => $backendUsed,
+	'fallbackUsed'     => $fallbackUsed,
+	'primaryBackend'   => $primaryBackend,
 ]);
