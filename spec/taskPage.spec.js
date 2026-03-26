@@ -300,7 +300,7 @@ describe("task page", function () {
 
   it("renders a confidence bar for previous rewrites history items", async function () {
     spyOn(modelService, "getPrediction").and.returnValues(
-      { label: 0, labelStr: "deceptive", confidence: 72.5 },
+      { label: 1, labelStr: "truthful", confidence: 72.5 },
       { label: 1, labelStr: "truthful", confidence: 76.5 }
     );
 
@@ -316,7 +316,7 @@ describe("task page", function () {
     const historyBar = historyItem.querySelector(".confidence-bar-fill");
 
     expect(historyBar).not.toBeNull();
-    expect(historyBar.classList.contains("fill-deceptive")).toBeTrue();
+    expect(historyBar.classList.contains("fill-truthful")).toBeTrue();
     expect(historyBar.style.width).toBe("72.5%");
   });
 });
