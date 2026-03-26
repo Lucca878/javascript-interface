@@ -115,6 +115,9 @@ window.app = {
   },
 
   showNoConsentPage() {
+    this.trackScreenTransition("no-consent");
+    storage.setCurrentScreen("no-consent");
+    this.pushHistoryState("no-consent");
     renderNoConsentPage(this);
   },
 
@@ -496,6 +499,12 @@ window.app = {
       return;
     }
 
+    if (storedScreen === "no-consent") {
+      this.ensurePageEnter("no-consent");
+      renderNoConsentPage(this);
+      return;
+    }
+
     if (storedScreen === "feedback") {
       this.ensureFeedbackSession();
       this.ensurePageEnter("feedback");
@@ -548,18 +557,24 @@ window.app = {
     }
 
     state.consentData = "Denied";
-    state.sessionData.pages.consent.decision = "Denied";
+
+    if (state.sessionData && state.sessionData.pages && state.sessionData.pages.consent) {
+      state.sessionData.pages.consent.decision = "Denied";
+    }
+
     state.taskSession = null;
     state.feedbackSession = null;
     state.feedbackSubmission = null;
+
     storage.clearTaskSession();
     storage.clearFeedbackSession();
     storage.clearFeedbackSubmission();
     storage.clearSessionData();
-    storage.clearCurrentScreen();
-    storage.clearParticipantId();
+
+    localStorage.removeItem(storage.PARTICIPANT_ID_KEY);
+    sessionStorage.removeItem(storage.PARTICIPANT_ID_KEY);
+
     state.sessionData = window.createSessionData();
-    this.pushHistoryState("no-consent");
     this.showNoConsentPage();
 
     console.log("Consent:", state.consentData);

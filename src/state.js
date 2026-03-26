@@ -25,7 +25,8 @@ window.createSessionData = function() {
       instructions: { enterTime: null, exitTime: null, duration: null },
       task: { enterTime: null, exitTime: null, duration: null, currentAttemptStartedAt: null, statements: [] },
       feedback: { enterTime: null, exitTime: null, duration: null, formData: null },
-      end: { enterTime: null, exitTime: null, duration: null }
+      end: { enterTime: null, exitTime: null, duration: null },
+      "no-consent": { enterTime: null, exitTime: null, duration: null }
     },
     totalDuration: null
   };

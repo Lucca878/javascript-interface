@@ -133,6 +133,16 @@ describe("app core", function () {
     expect(document.getElementById("app").textContent).toContain("Thank you for participating in our study");
   });
 
+  it("restores the no-consent page when the stored screen is no-consent", function () {
+    spyOn(app, "getProlificIdFromUrl").and.returnValue(null);
+    storage.setCurrentScreen("no-consent");
+
+    app.init();
+
+    expect(document.getElementById("app").textContent).toContain("Study Ended");
+    expect(document.getElementById("app").textContent).toContain("You did not provide consent");
+  });
+
   it("stores the current screen and pushes history when showing the consent page", function () {
     spyOn(app, "pushHistoryState");
     testHelpers.mountAppContainer();
