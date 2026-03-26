@@ -22,6 +22,8 @@ __pycache__/
 
 # Local model artifacts
 backend/models/
+backend/*.tar.gz
+backend/*.tgz
 
 # Participant data - never commit
 data/sessions/

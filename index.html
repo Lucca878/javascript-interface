@@ -21,6 +21,7 @@
         : "api/statements.php";
 
     const defaultModelEndpoint = "https://model-backend-302671925464.europe-west4.run.app/predict";
+    const hetznerModelEndpoint = "https://api.lpstudies.net/predict";
 
     const defaultParticipantDataEndpoint =
       runningLocally && window.location.port !== "8000"
@@ -30,8 +31,14 @@
     window.APP_CONFIG = {
       // Example: "api/statements.php" or "/backend/get_statements.php"
       corpusPhpEndpoint: defaultCorpusEndpoint,
-      // Example local backend endpoint for FastAPI model service
+      // Legacy single-endpoint config (still supported by modelService)
       modelApiEndpoint: defaultModelEndpoint,
+      // Multi-backend config (Step 1 for safe migration)
+      modelApiBackends: {
+        gcloud: defaultModelEndpoint,
+        hetzner: hetznerModelEndpoint
+      },
+      activeModelBackend: "hetzner",
       // Endpoint used to persist participant session records
       participantDataEndpoint: defaultParticipantDataEndpoint
     };

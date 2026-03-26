@@ -15,7 +15,15 @@ window.modelService = {
   },
 
   getApiEndpoint() {
-    const configured = window.APP_CONFIG && window.APP_CONFIG.modelApiEndpoint;
+    const config = window.APP_CONFIG || {};
+    const activeBackend = config.activeModelBackend;
+    const backendMap = config.modelApiBackends;
+
+    if (activeBackend && backendMap && backendMap[activeBackend]) {
+      return String(backendMap[activeBackend]).trim();
+    }
+
+    const configured = config.modelApiEndpoint;
     if (configured && String(configured).trim()) {
       return String(configured).trim();
     }
