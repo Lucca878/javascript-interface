@@ -145,4 +145,14 @@ window.renderTaskPage = function renderTaskPage(app) {
       .getElementById("taskContinueButton")
       .addEventListener("click", () => app.handleTaskContinueToFeedback());
   }
+
+  // Uncomment to block paste into the rewrite textarea:
+  // const textarea = document.getElementById("taskRewriteInput");
+  // if (textarea) {
+  //   textarea.addEventListener("paste", (e) => e.preventDefault());
+  //   textarea.addEventListener("keydown", (e) => {
+  //     if ((e.ctrlKey || e.metaKey) && e.key === "v") e.preventDefault();
+  //   });
+  // }
+  // document.addEventListener("contextmenu", (e) => e.preventDefault());
 };

@@ -188,7 +188,10 @@ body {
 .task-summary {
   margin: 0 0 12px;
   line-height: 1.7;
+  /* user-select: none; */ /* uncomment to block text selection on read-only content */
 }
+
+/* .task-panel { user-select: none; } */ /* uncomment to block selection on entire task panels */
 
 .task-label {
   display: block;

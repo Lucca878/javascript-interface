@@ -12,7 +12,7 @@ window.renderNoConsentPage = function renderNoConsentPage() {
 
     <div class="task-panel">
       <p class="task-summary">
-        Because consent was not provided, we do not continue with the study flow and your study responses will not be submitted.
+        Because consent was not provided, the study ends and your study responses will not be submitted.
       </p>
       <p class="task-summary">
         You may now close this page.
