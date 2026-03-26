@@ -359,6 +359,74 @@ mkdir -p /var/backups/study-data
 tar -czf "/var/backups/study-data/study-data-$(date +%F-%H%M).tar.gz" -C /var/www/study data
 ```
 
+## Data Retrieval (GCloud / Cloud Storage)
+
+Use this section if you need historical data that was written to Cloud Storage before migrating to Hetzner.
+
+Set your bucket name (example used previously: `paraphrasing-attacks-data-euw4`):
+
+```bash
+export BUCKET_NAME="paraphrasing-attacks-data-euw4"
+```
+
+## 1) Authenticate and set project
+
+```bash
+gcloud auth login
+gcloud config set project <PROJECT_ID>
+```
+
+## 2) List stored objects
+
+```bash
+gcloud storage ls "gs://${BUCKET_NAME}/" --recursive
+```
+
+Typical paths:
+
+- `gs://<bucket>/sessions/<prolific_id>_<session_id>.json`
+- `gs://<bucket>/csv-rows/<prolific_id>_<session_id>.csv`
+
+## 3) Export complete combined CSV from all participants
+
+```bash
+gcloud storage cat "gs://${BUCKET_NAME}/csv-rows/*.csv" \
+  | awk 'NR==1 || !/^session_id/' \
+  > ~/Desktop/all_sessions.csv
+```
+
+```bash
+gcloud storage cat "gs://paraphrasing-attacks-data-euw4/csv-rows/*.csv" \
+  | awk 'NR==1 || !/^session_id/' \
+  > ~/Desktop/all_sessions.csv
+```
+
+This keeps one header row and appends all participant rows.
+
+## 4) Download all full session JSON files
+
+```bash
+mkdir -p ~/Desktop/gcloud_sessions_json
+gcloud storage cp "gs://${BUCKET_NAME}/sessions/*.json" ~/Desktop/gcloud_sessions_json/
+```
+
+## 5) Inspect single participant/session quickly
+
+```bash
+# Show one CSV row file
+gcloud storage cat "gs://${BUCKET_NAME}/csv-rows/<prolific_id>_<session_id>.csv"
+
+# Show one full JSON file
+gcloud storage cat "gs://${BUCKET_NAME}/sessions/<prolific_id>_<session_id>.json"
+```
+
+## 6) Optional: archive full bucket snapshot locally
+
+```bash
+mkdir -p ~/Desktop/gcloud_bucket_snapshot
+gcloud storage cp --recursive "gs://${BUCKET_NAME}" ~/Desktop/gcloud_bucket_snapshot/
+```
+
 ## End-to-End Test Playbook
 
 ## A) Local end-to-end test
