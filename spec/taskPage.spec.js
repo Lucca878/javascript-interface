@@ -297,4 +297,26 @@ describe("task page", function () {
 
     expect(historyTitles).toEqual(["Attempt 1", "Attempt 2"]);
   });
+
+  it("renders a confidence bar for previous rewrites history items", async function () {
+    spyOn(modelService, "getPrediction").and.returnValues(
+      { label: 0, labelStr: "deceptive", confidence: 72.5 },
+      { label: 1, labelStr: "truthful", confidence: 76.5 }
+    );
+
+    document.getElementById("taskRewriteInput").value =
+      "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+    await app.handleTaskSubmit();
+
+    document.getElementById("taskRewriteInput").value =
+      "I traveled by train to Rotterdam and met a friend by the river, then we shared coffee downtown.";
+    await app.handleTaskSubmit();
+
+    const historyItem = document.querySelector(".history-item");
+    const historyBar = historyItem.querySelector(".confidence-bar-fill");
+
+    expect(historyBar).not.toBeNull();
+    expect(historyBar.classList.contains("fill-deceptive")).toBeTrue();
+    expect(historyBar.style.width).toBe("72.5%");
+  });
 });

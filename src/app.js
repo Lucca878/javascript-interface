@@ -114,6 +114,10 @@ window.app = {
     renderConsentPage(this);
   },
 
+  showNoConsentPage() {
+    renderNoConsentPage(this);
+  },
+
   showInstructionsPage() {
     this.trackScreenTransition("instructions");
     storage.setCurrentScreen("instructions");
@@ -535,10 +539,28 @@ window.app = {
   },
 
   handleConsentDeny() {
+    const confirmed = window.confirm(
+      "You need to agree to participate in the study to continue. If you do not agree, the study ends here."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     state.consentData = "Denied";
     state.sessionData.pages.consent.decision = "Denied";
-    window.persistSessionData && window.persistSessionData();
-    this.showEndPage();
+    state.taskSession = null;
+    state.feedbackSession = null;
+    state.feedbackSubmission = null;
+    storage.clearTaskSession();
+    storage.clearFeedbackSession();
+    storage.clearFeedbackSubmission();
+    storage.clearSessionData();
+    storage.clearCurrentScreen();
+    storage.clearParticipantId();
+    state.sessionData = window.createSessionData();
+    this.pushHistoryState("no-consent");
+    this.showNoConsentPage();
 
     console.log("Consent:", state.consentData);
   },

@@ -28,12 +28,21 @@ window.storage = {
     localStorage.setItem(this.PARTICIPANT_ID_KEY, participantId);
   },
 
+  clearParticipantId() {
+    localStorage.removeItem(this.PARTICIPANT_ID_KEY);
+    sessionStorage.removeItem(this.PARTICIPANT_ID_KEY);
+  },
+
   getCurrentScreen() {
     return sessionStorage.getItem(this.CURRENT_SCREEN_KEY);
   },
 
   setCurrentScreen(screenName) {
     sessionStorage.setItem(this.CURRENT_SCREEN_KEY, screenName);
+  },
+
+  clearCurrentScreen() {
+    sessionStorage.removeItem(this.CURRENT_SCREEN_KEY);
   },
 
   getTaskSession() {
