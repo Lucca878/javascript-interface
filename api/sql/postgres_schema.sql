@@ -21,3 +21,6 @@ CREATE INDEX IF NOT EXISTS idx_results_received_at
 
 CREATE INDEX IF NOT EXISTS idx_results_payload_json_gin
   ON results USING GIN (payload_json);
+
+GRANT ALL ON TABLE results TO study_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO study_app;
