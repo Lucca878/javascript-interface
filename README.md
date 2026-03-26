@@ -344,44 +344,119 @@ Deduplication is enforced by SQL unique key on `session_id`.
 
 ## Data Retrieval (PostgreSQL on Hetzner)
 
-Data is stored in PostgreSQL (`results`).
+All participant data is stored in the `results` table in the `study` PostgreSQL database on the Hetzner VPS.
 
-## 1) Inspect data on server
+Each row has:
+- `session_id` — unique ID for the session (guaranteed no duplicates)
+- `prolific_id` — the participant's Prolific ID
+- `received_at` — when the server received the submission
+- `payload_json` — the full raw session object as JSON
+- `csv_row_json` — the flat 55-column row as JSON (used for CSV export)
+- `created_at` — when the row was inserted into the database
+
+All commands below run on the server after `ssh root@157.90.127.76`.
+
+## 1) Count and inspect rows
 
 ```bash
-ssh root@157.90.127.76
+# Total number of submissions
 sudo -u postgres psql -d study -c "SELECT COUNT(*) FROM results;"
+
+# Most recent 20 submissions
 sudo -u postgres psql -d study -c "SELECT session_id, prolific_id, received_at FROM results ORDER BY received_at DESC LIMIT 20;"
+
+# All submissions for one participant
+sudo -u postgres psql -d study -c "SELECT session_id, received_at FROM results WHERE prolific_id = '<prolific_id>' ORDER BY received_at;"
+
+# Look up one specific session by session_id
+sudo -u postgres psql -d study -c "SELECT session_id, prolific_id, received_at FROM results WHERE session_id = '<session_id>';"
 ```
 
-## 2) View latest records
+## 2) Read JSON data
 
 ```bash
-# Last 5 rows as CSV-compatible columns
-sudo -u postgres psql -d study -c "SELECT (csv_row_json->>'session_id') AS session_id, (csv_row_json->>'prolific_id') AS prolific_id, (csv_row_json->>'received_at') AS received_at FROM results ORDER BY received_at DESC LIMIT 5;"
-
-# Inspect one full JSON payload
+# Full raw payload for one session (pretty-printed)
 sudo -u postgres psql -d study -c "SELECT payload_json FROM results WHERE session_id = '<session_id>';"
+
+# One specific field from the payload (e.g. consent decision)
+sudo -u postgres psql -d study -c "SELECT payload_json->'pages'->'consent'->>'decision' FROM results WHERE session_id = '<session_id>';"
+
+# Flat CSV row data for one session
+sudo -u postgres psql -d study -c "SELECT csv_row_json FROM results WHERE session_id = '<session_id>';"
+
+# One specific CSV field (e.g. total duration)
+sudo -u postgres psql -d study -c "SELECT csv_row_json->>'total_duration_ms' FROM results WHERE session_id = '<session_id>';"
 ```
 
-## 3) Download data to local machine
+## 3) Export data to local machine
 
-From local terminal:
+Run these from your **local terminal** (not on the server):
 
 ```bash
-# Export all sessions CSV from sql
+# Export all sessions as CSV to Desktop
 ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -F',' -c \"SELECT csv_row_json->>'session_id',csv_row_json->>'prolific_id',csv_row_json->>'session_start',csv_row_json->>'session_end',csv_row_json->>'total_duration_ms',csv_row_json->>'consent_decision',csv_row_json->>'statement_id',csv_row_json->>'original_text',csv_row_json->>'original_label',csv_row_json->>'original_confidence',csv_row_json->>'attempts_used',csv_row_json->>'max_attempts',csv_row_json->>'rewrite1_text',csv_row_json->>'rewrite1_label',csv_row_json->>'rewrite1_confidence',csv_row_json->>'rewrite1_duration_ms',csv_row_json->>'rewrite2_text',csv_row_json->>'rewrite2_label',csv_row_json->>'rewrite2_confidence',csv_row_json->>'rewrite2_duration_ms',csv_row_json->>'rewrite3_text',csv_row_json->>'rewrite3_label',csv_row_json->>'rewrite3_confidence',csv_row_json->>'rewrite3_duration_ms',csv_row_json->>'rewrite4_text',csv_row_json->>'rewrite4_label',csv_row_json->>'rewrite4_confidence',csv_row_json->>'rewrite4_duration_ms',csv_row_json->>'rewrite5_text',csv_row_json->>'rewrite5_label',csv_row_json->>'rewrite5_confidence',csv_row_json->>'rewrite5_duration_ms',csv_row_json->>'rewrite6_text',csv_row_json->>'rewrite6_label',csv_row_json->>'rewrite6_confidence',csv_row_json->>'rewrite6_duration_ms',csv_row_json->>'rewrite7_text',csv_row_json->>'rewrite7_label',csv_row_json->>'rewrite7_confidence',csv_row_json->>'rewrite7_duration_ms',csv_row_json->>'rewrite8_text',csv_row_json->>'rewrite8_label',csv_row_json->>'rewrite8_confidence',csv_row_json->>'rewrite8_duration_ms',csv_row_json->>'rewrite9_text',csv_row_json->>'rewrite9_label',csv_row_json->>'rewrite9_confidence',csv_row_json->>'rewrite9_duration_ms',csv_row_json->>'rewrite10_text',csv_row_json->>'rewrite10_label',csv_row_json->>'rewrite10_confidence',csv_row_json->>'rewrite10_duration_ms',csv_row_json->>'difficulty',csv_row_json->>'motivation',csv_row_json->>'strategies',csv_row_json->>'feedback_text',csv_row_json->>'received_at' FROM results ORDER BY received_at;\"" > ~/Desktop/all_sessions.csv
 
-# Export all full payload JSON rows (NDJSON)
+# Export all full payload JSON rows as NDJSON (one JSON object per line)
 ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -c \"SELECT payload_json::text FROM results ORDER BY received_at;\"" > ~/Desktop/all_sessions.ndjson
+
+# Export one participant's sessions as CSV
+ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -F',' -c \"SELECT csv_row_json->>'session_id', csv_row_json->>'prolific_id', csv_row_json->>'received_at' FROM results WHERE prolific_id = '<prolific_id>' ORDER BY received_at;\"" > ~/Desktop/participant_sessions.csv
 ```
 
-## 4) Create timestamped backup on server
+## 4) Edit rows
 
 ```bash
-ssh root@157.90.127.76
-mkdir -p /var/backups/study-data
-tar -czf "/var/backups/study-data/study-data-$(date +%F-%H%M).tar.gz" -C /var/www/study data
+# Delete one specific session by session_id (e.g. test submissions)
+sudo -u postgres psql -d study -c "DELETE FROM results WHERE session_id = '<session_id>';"
+
+# Delete all sessions for one participant
+sudo -u postgres psql -d study -c "DELETE FROM results WHERE prolific_id = '<prolific_id>';"
+
+# Delete all test/dummy rows (e.g. prolific_id starts with 'test')
+sudo -u postgres psql -d study -c "DELETE FROM results WHERE prolific_id LIKE 'test%';"
+
+# Update a field in csv_row_json for one session (e.g. fix a prolific_id typo)
+sudo -u postgres psql -d study -c "UPDATE results SET csv_row_json = jsonb_set(csv_row_json, '{prolific_id}', '\"correct-id\"') WHERE session_id = '<session_id>';"
+```
+
+## 5) Interactive psql session
+
+For more complex queries, open an interactive session:
+
+```bash
+sudo -u postgres psql -d study
+```
+
+Useful psql commands inside the session:
+
+```sql
+-- list tables
+\dt
+
+-- describe results table columns
+\d results
+
+-- run any query
+SELECT * FROM results LIMIT 5;
+
+-- exit
+\q
+```
+
+## 6) Create timestamped database backup
+
+```bash
+# Dump full database to file on server
+sudo -u postgres pg_dump study > /var/backups/study-$(date +%F-%H%M).sql
+
+# Download dump to local machine (run from local terminal)
+scp root@157.90.127.76:/var/backups/study-$(date +%F).sql ~/Desktop/study-backup.sql
+```
+
+## 7) Restore from backup
+
+```bash
+sudo -u postgres psql -d study -f /var/backups/study-<date>.sql
 ```
 
 ## Data Retrieval (GCloud / Cloud Storage)
