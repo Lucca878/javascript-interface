@@ -59,11 +59,13 @@ describe("consent page", function () {
 
     expect(app.showEndPage).not.toHaveBeenCalled();
     expect(storage.getParticipantId()).toBeNull();
-    expect(storage.getCurrentScreen()).toBeNull();
+    expect(storage.getCurrentScreen()).toBe("no-consent");
     expect(storage.getTaskSession()).toBeNull();
     expect(storage.getFeedbackSession()).toBeNull();
     expect(storage.getFeedbackSubmission()).toBeNull();
-    expect(storage.getSessionData()).toBeNull();
+    // A fresh session is created and persisted by the new no-consent screen routing.
+    expect(storage.getSessionData()).not.toBeNull();
+    expect(storage.getSessionData().sessionId).not.toBe("session-1");
     expect(document.getElementById("app").textContent).toContain("Study Ended");
   });
   it("scrolls to the top when the consent page is rendered", function () {
