@@ -271,4 +271,30 @@ describe("task page", function () {
     expect(document.querySelector(".history-summary")).toBeNull();
     expect(document.getElementById("app").textContent).toContain("Latest rewrite feedback");
   });
+
+  it("renders previous rewrites in chronological order with attempt 1 first", async function () {
+    spyOn(modelService, "getPrediction").and.returnValues(
+      { label: 1, labelStr: "truthful", confidence: 80.0 },
+      { label: 1, labelStr: "truthful", confidence: 76.5 },
+      { label: 1, labelStr: "truthful", confidence: 74.2 }
+    );
+
+    document.getElementById("taskRewriteInput").value =
+      "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+    await app.handleTaskSubmit();
+
+    document.getElementById("taskRewriteInput").value =
+      "I traveled by train to Rotterdam and met a friend by the river, then we shared coffee downtown.";
+    await app.handleTaskSubmit();
+
+    document.getElementById("taskRewriteInput").value =
+      "I went by train to Rotterdam and met a friend by the river, then we had coffee in the city center.";
+    await app.handleTaskSubmit();
+
+    const historyTitles = Array.from(document.querySelectorAll(".history-item-title")).map(function (element) {
+      return element.textContent.trim();
+    });
+
+    expect(historyTitles).toEqual(["Attempt 1", "Attempt 2"]);
+  });
 });

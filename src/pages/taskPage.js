@@ -6,7 +6,7 @@ window.renderTaskPage = function renderTaskPage(app) {
   const targetLabel = taskSession.originalPrediction.label === 1 ? "deceptive" : "truthful";
   const originalWordCount = app.countWords(taskSession.originalText);
   const rewriteHistory = Array.isArray(taskSession.rewriteHistory) ? taskSession.rewriteHistory : [];
-  const previousAttempts = rewriteHistory.slice(0, -1).reverse();
+  const previousAttempts = rewriteHistory.slice(0, -1);
   const latestPredictionMarkup = taskSession.latestPrediction
     ? `
       <div class="task-panel">
