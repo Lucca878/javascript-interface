@@ -140,11 +140,12 @@ window.renderFeedbackPage = function renderFeedbackPage(app) {
       <p class="task-summary">Current value: <strong id="difficultyScaleValue">${difficultyLabel}</strong></p>
     </div>
 
-    ${recapMarkup}
-
     <label class="task-label" for="strategiesInput">
       <strong>4. Which strategies did you use to manipulate statements so the AI would be misled?</strong>
     </label>
+
+    ${recapMarkup}
+
     <textarea
       id="strategiesInput"
       class="task-textarea"
