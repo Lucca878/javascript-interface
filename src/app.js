@@ -565,6 +565,7 @@ window.app = {
       return;
     }
 
+    storage.setCurrentScreen("welcome");
     this.ensurePageEnter("welcome");
     renderWelcomePage(this);
   },

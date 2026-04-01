@@ -149,6 +149,7 @@ window.renderFeedbackPage = function renderFeedbackPage(app) {
     <textarea
       id="strategiesInput"
       class="task-textarea"
+      style="margin-top: 1rem;"
       rows="7"
       placeholder="Describe your approach in as much detail as you can."
     >${utils.escapeHtml(feedbackSession.strategies || "")}</textarea>
