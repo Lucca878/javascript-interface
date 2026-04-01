@@ -64,7 +64,7 @@ window.renderAttentionCheckPage = function renderAttentionCheckPage(app) {
       </div>
 
       <div class="actions">
-        <button type="submit" class="button" id="attentionCheckNextButton">Continue</button>
+        <button type="submit" class="button" id="attentionCheckNextButton">Next</button>
       </div>
     </form>
   `;
