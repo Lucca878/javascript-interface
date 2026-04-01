@@ -173,7 +173,6 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 	$row['motivation'] = scalarToString(is_array($feedbackFormData) ? ($feedbackFormData['motivation'] ?? '') : '');
 	$row['strategies'] = scalarToString($strategies);
 	$row['feedback_text'] = scalarToString(is_array($feedbackFormData) ? ($feedbackFormData['feedbackText'] ?? '') : '');
-	$row['task_goal_answer'] = scalarToString(is_array($feedbackFormData) ? ($feedbackFormData['taskGoalAnswer'] ?? '') : '');
 	$row['attention_check_q1_answer'] = $q1Answer;
 	$row['attention_check_q2_answer'] = $q2Answer;
 	$row['attention_check_q3_answer'] = $q3Answer;
@@ -183,8 +182,12 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 	$row['attention_check_score'] = $numCorrect;
 	$row['attention_check_num_correct'] = $numCorrect;
 	$row['attention_check_all_correct'] = $allCorrect;
+	$row['welcome_duration_ms'] = scalarToString(getNested($payload, ['pages', 'welcome', 'duration'], ''));
+	$row['consent_duration_ms'] = scalarToString(getNested($payload, ['pages', 'consent', 'duration'], ''));
+	$row['instructions_duration_ms'] = scalarToString(getNested($payload, ['pages', 'instructions', 'duration'], ''));
 	$row['attention_check_duration_ms'] = scalarToString(getNested($payload, ['pages', 'attentionCheck', 'duration'], ''));
 	$row['task_reminder_duration_ms'] = scalarToString(getNested($payload, ['pages', 'taskReminder', 'duration'], ''));
+	$row['feedback_duration_ms'] = scalarToString(getNested($payload, ['pages', 'feedback', 'duration'], ''));
 	$row['received_at'] = $receivedAt;
 
 	return $row;

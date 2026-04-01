@@ -8,7 +8,11 @@ SELECT
   csv_row_json->>'session_start' AS session_start,
   csv_row_json->>'session_end' AS session_end,
   csv_row_json->>'total_duration_ms' AS total_duration_ms,
+  csv_row_json->>'welcome_duration_ms' AS welcome_duration_ms,
   csv_row_json->>'consent_decision' AS consent_decision,
+  csv_row_json->>'consent_duration_ms' AS consent_duration_ms,
+  csv_row_json->>'instructions_duration_ms' AS instructions_duration_ms,
+  csv_row_json->>'task_reminder_duration_ms' AS task_reminder_duration_ms,
   csv_row_json->>'statement_id' AS statement_id,
   csv_row_json->>'original_text' AS original_text,
   csv_row_json->>'original_label' AS original_label,
@@ -59,7 +63,7 @@ SELECT
   csv_row_json->>'motivation' AS motivation,
   csv_row_json->>'strategies' AS strategies,
   csv_row_json->>'feedback_text' AS feedback_text,
-  csv_row_json->>'task_goal_answer' AS task_goal_answer,
+  csv_row_json->>'feedback_duration_ms' AS feedback_duration_ms,
   csv_row_json->>'attention_check_q1_answer' AS attention_check_q1_answer,
   csv_row_json->>'attention_check_q2_answer' AS attention_check_q2_answer,
   csv_row_json->>'attention_check_q3_answer' AS attention_check_q3_answer,
@@ -70,6 +74,5 @@ SELECT
   csv_row_json->>'attention_check_num_correct' AS attention_check_num_correct,
   csv_row_json->>'attention_check_all_correct' AS attention_check_all_correct,
   csv_row_json->>'attention_check_duration_ms' AS attention_check_duration_ms,
-  csv_row_json->>'task_reminder_duration_ms' AS task_reminder_duration_ms,
   csv_row_json->>'received_at' AS received_at
 FROM results;
