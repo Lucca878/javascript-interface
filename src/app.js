@@ -135,6 +135,13 @@ window.app = {
     renderAttentionCheckPage(this);
   },
 
+  showTaskReminderPage() {
+    this.trackScreenTransition("taskReminder");
+    storage.setCurrentScreen("taskReminder");
+    this.pushHistoryState("taskReminder");
+    renderTaskReminderPage(this);
+  },
+
   showEndPage() {
     this.trackScreenTransition("end");
 
@@ -529,6 +536,12 @@ window.app = {
       return;
     }
 
+    if (storedScreen === "taskReminder") {
+      this.ensurePageEnter("taskReminder");
+      renderTaskReminderPage(this);
+      return;
+    }
+
     if (storedScreen === "attentionCheck") {
       this.ensurePageEnter("attentionCheck");
       renderAttentionCheckPage(this);
@@ -633,6 +646,10 @@ window.app = {
       });
     }
 
+    this.showTaskReminderPage();
+  },
+
+  handleTaskReminderNext() {
     this.showTaskPage();
   },
 

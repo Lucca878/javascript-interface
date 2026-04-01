@@ -30,7 +30,7 @@ describe("welcome page", function () {
     app.showWelcomePage();
     document.getElementById("nextButton").click();
 
-    expect(document.getElementById("app").textContent).toContain("Informed Consent");
+    expect(document.getElementById("app").textContent).toContain("Information and Consent");
     expect(document.getElementById("acceptButton")).not.toBeNull();
     expect(document.getElementById("denyButton")).not.toBeNull();
   });

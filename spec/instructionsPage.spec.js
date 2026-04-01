@@ -21,7 +21,7 @@ describe("instructions page", function () {
   it("navigates to the attention-check page when Next is clicked", function () {
     document.getElementById("instructionsNextButton").click();
 
-    expect(document.getElementById("app").textContent).toContain("Comprehension");
+    expect(document.getElementById("app").textContent).toContain("Please answer these two questions based on the instructions you just read.");
     expect(document.getElementById("attentionCheckNextButton")).not.toBeNull();
   });
   it("scrolls to the top when the instructions page is rendered", function () {

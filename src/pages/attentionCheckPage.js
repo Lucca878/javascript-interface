@@ -12,8 +12,6 @@ window.renderAttentionCheckPage = function renderAttentionCheckPage(app) {
     : '<div class="message" id="messageBox"></div>';
 
   appRoot.innerHTML = `
-    <h1 class="title">Comprehension</h1>
-
     <p class="lead">
       Please answer these two questions based on the instructions you just read.
     </p>
@@ -62,7 +60,7 @@ window.renderAttentionCheckPage = function renderAttentionCheckPage(app) {
       </fieldset>
 
       <div class="actions">
-        <button type="submit" class="button" id="attentionCheckNextButton">Continue to Task</button>
+        <button type="submit" class="button" id="attentionCheckNextButton">Continue</button>
       </div>
     </form>
   `;

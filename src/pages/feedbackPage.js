@@ -13,7 +13,7 @@ window.renderFeedbackPage = function renderFeedbackPage(app) {
     <h1 class="title">Feedback</h1>
 
     <p class="lead">
-      Please provide feedback about the study. Your feedback is valuable and helps us improve the experiment.
+      We are keen to hear your feedback about this study. Your feedback is valuable and helps us improve the experiment.
     </p>
 
     <p class="note">Move both sliders to confirm your answers.</p>
@@ -61,7 +61,7 @@ window.renderFeedbackPage = function renderFeedbackPage(app) {
   const difficultySlider = document.getElementById("difficultyScaleInput");
   utils.updateSliderFill(motivationSlider);
   utils.updateSliderFill(difficultySlider);
-  
+
   document.getElementById("motivationScaleInput").addEventListener("input", function (event) {
     const nextValue = Number(event.target.value);
     document.getElementById("motivationScaleValue").textContent = String(nextValue);

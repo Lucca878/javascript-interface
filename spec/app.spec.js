@@ -43,7 +43,7 @@ describe("app core", function () {
 
     app.init();
 
-    expect(document.getElementById("app").textContent).toContain("Informed Consent");
+    expect(document.getElementById("app").textContent).toContain("Information and Consent");
     expect(document.getElementById("acceptButton")).not.toBeNull();
     expect(document.getElementById("denyButton")).not.toBeNull();
   });
@@ -96,8 +96,19 @@ describe("app core", function () {
 
     app.init();
 
-    expect(document.getElementById("app").textContent).toContain("Comprehension");
+    expect(document.getElementById("app").textContent).toContain("Please answer these two questions based on the instructions you just read.");
     expect(document.getElementById("attentionCheckNextButton")).not.toBeNull();
+  });
+
+  it("restores the task reminder page when the stored screen is taskReminder", function () {
+    spyOn(app, "getProlificIdFromUrl").and.returnValue(null);
+    storage.setParticipantId("stored-001");
+    storage.setCurrentScreen("taskReminder");
+
+    app.init();
+
+    expect(document.getElementById("app").textContent).toContain("You are now about to start the main task.");
+    expect(document.getElementById("taskReminderNextButton")).not.toBeNull();
   });
 
   it("restores the feedback page when the stored screen is feedback", function () {
@@ -204,6 +215,16 @@ describe("app core", function () {
 
     expect(storage.getCurrentScreen()).toBe("attentionCheck");
     expect(app.pushHistoryState).toHaveBeenCalledWith("attentionCheck");
+  });
+
+  it("stores the current screen and pushes history when showing the task reminder page", function () {
+    spyOn(app, "pushHistoryState");
+    testHelpers.mountAppContainer();
+
+    app.showTaskReminderPage();
+
+    expect(storage.getCurrentScreen()).toBe("taskReminder");
+    expect(app.pushHistoryState).toHaveBeenCalledWith("taskReminder");
   });
 
   it("stores the current screen and pushes history when showing the feedback page", function () {

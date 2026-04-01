@@ -67,7 +67,7 @@ describe("task page", function () {
 
     expect(state.taskSession.attemptsUsed).toBe(1);
     expect(state.taskSession.latestPrediction).not.toBeNull();
-    expect(document.getElementById("app").textContent).toContain("Latest rewrite feedback");
+    expect(document.getElementById("app").textContent).toContain("Latest modification feedback");
   });
 
   it("blocks submission and does not increment attempts when all attempts are used", function () {
@@ -118,7 +118,7 @@ describe("task page", function () {
 
     expect(state.taskSession.attemptsUsed).toBe(10);
     expect(document.getElementById("app").textContent).toContain("maximum number of attempts");
-    expect(document.getElementById("app").textContent).toContain("Latest rewrite feedback");
+    expect(document.getElementById("app").textContent).toContain("Latest modification feedback");
     expect(document.getElementById("taskContinueButton")).not.toBeNull();
     expect(document.getElementById("taskRewriteInput")).toBeNull();
     expect(document.getElementById("taskSubmitButton")).toBeNull();
@@ -253,10 +253,10 @@ describe("task page", function () {
     document.getElementById("taskRewriteInput").value = secondRewrite;
     await app.handleTaskSubmit();
 
-    expect(document.querySelector(".history-summary").textContent).toContain("See previous rewrites (1)");
+    expect(document.querySelector(".history-summary").textContent).toContain("See previous modifications (1)");
     expect(document.querySelector(".history-item").textContent).toContain("Attempt 1");
     expect(document.querySelector(".history-item").textContent).toContain(firstRewrite);
-    expect(document.getElementById("app").textContent).toContain("Latest rewrite feedback");
+    expect(document.getElementById("app").textContent).toContain("Latest modification feedback");
   });
 
   it("does not render previous rewrites history when there is only one attempt", async function () {
@@ -269,7 +269,7 @@ describe("task page", function () {
 
     expect(state.taskSession.rewriteHistory.length).toBe(1);
     expect(document.querySelector(".history-summary")).toBeNull();
-    expect(document.getElementById("app").textContent).toContain("Latest rewrite feedback");
+    expect(document.getElementById("app").textContent).toContain("Latest modification feedback");
   });
 
   it("renders previous rewrites in chronological order with attempt 1 first", async function () {

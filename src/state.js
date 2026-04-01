@@ -35,6 +35,7 @@ window.createSessionData = function() {
         statusMessage: "",
         statusType: "info"
       },
+      taskReminder: { enterTime: null, exitTime: null, duration: null },
       task: { enterTime: null, exitTime: null, duration: null, currentAttemptStartedAt: null, statements: [] },
       feedback: { enterTime: null, exitTime: null, duration: null, formData: null },
       end: { enterTime: null, exitTime: null, duration: null },

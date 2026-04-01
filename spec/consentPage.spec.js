@@ -10,7 +10,7 @@ describe("consent page", function () {
   });
 
   it("renders the informed consent page", function () {
-    expect(document.getElementById("app").textContent).toContain("Informed Consent");
+    expect(document.getElementById("app").textContent).toContain("Information and Consent");
     expect(document.getElementById("acceptButton")).not.toBeNull();
     expect(document.getElementById("denyButton")).not.toBeNull();
   });
@@ -41,7 +41,7 @@ describe("consent page", function () {
 
     expect(state.consentData).toBeNull();
     expect(app.showNoConsentPage).not.toHaveBeenCalled();
-    expect(document.getElementById("app").textContent).toContain("Informed Consent");
+    expect(document.getElementById("app").textContent).toContain("Information and Consent");
   });
 
   it("clears persisted study data and skips the normal end page when deny is confirmed", function () {

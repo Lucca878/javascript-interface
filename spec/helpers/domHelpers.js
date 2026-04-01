@@ -19,6 +19,9 @@ window.testHelpers = {
       state.taskSession = null;
       state.feedbackSession = null;
       state.feedbackSubmission = null;
+      if (typeof window.createSessionData === "function") {
+        state.sessionData = window.createSessionData();
+      }
     }
 
     if (window.corpusService) {
