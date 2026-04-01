@@ -18,11 +18,11 @@ describe("instructions page", function () {
     expect(document.getElementById("app").textContent).toContain("10");
   });
 
-  it("shows a placeholder message when Next is clicked", function () {
+  it("navigates to the attention-check page when Next is clicked", function () {
     document.getElementById("instructionsNextButton").click();
 
-    expect(document.getElementById("app").textContent).toContain("Main Task");
-    expect(document.getElementById("taskSubmitButton")).not.toBeNull();
+    expect(document.getElementById("app").textContent).toContain("Comprehension");
+    expect(document.getElementById("attentionCheckNextButton")).not.toBeNull();
   });
   it("scrolls to the top when the instructions page is rendered", function () {
     spyOn(utils, "scrollToTop");

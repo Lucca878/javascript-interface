@@ -23,6 +23,18 @@ window.createSessionData = function() {
     pages: {
       consent: { enterTime: null, exitTime: null, duration: null, decision: null },
       instructions: { enterTime: null, exitTime: null, duration: null },
+      attentionCheck: {
+        enterTime: null,
+        exitTime: null,
+        duration: null,
+        responses: null,
+        correctAnswers: null,
+        score: null,
+        allCorrect: null,
+        submittedAt: null,
+        statusMessage: "",
+        statusType: "info"
+      },
       task: { enterTime: null, exitTime: null, duration: null, currentAttemptStartedAt: null, statements: [] },
       feedback: { enterTime: null, exitTime: null, duration: null, formData: null },
       end: { enterTime: null, exitTime: null, duration: null },

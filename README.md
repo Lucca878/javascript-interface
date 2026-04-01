@@ -48,9 +48,10 @@ Participants go through these screens:
 1. Welcome
 2. Consent
 3. Instructions
-4. Task (up to 10 rewrite attempts)
-5. Feedback
-6. End
+4. Attention Check (2 multiple-choice questions)
+5. Task (up to 10 rewrite attempts)
+6. Feedback
+7. End
 
 The app records session timing and interaction data and submits it through `api/participantData.php`.
 
@@ -351,7 +352,7 @@ Each row has:
 - `prolific_id` — the participant's Prolific ID
 - `received_at` — when the server received the submission
 - `payload_json` — the full raw session object as JSON
-- `csv_row_json` — the flat 55-column row as JSON (used for CSV export)
+- `csv_row_json` — the flat CSV-compatible row as JSON (includes attention-check fields)
 - `created_at` — when the row was inserted into the database
 
 All commands below run on the server after `ssh root@157.90.127.76`.

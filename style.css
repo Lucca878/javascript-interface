@@ -125,6 +125,29 @@ body {
   color: #9a5d00;
 }
 
+.question-box {
+  margin: 20px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f9fbff;
+}
+
+.question-box legend {
+  padding: 0 6px;
+}
+
+.option-row {
+  display: block;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 10px 0;
+}
+
+.option-row input {
+  margin-right: 8px;
+}
+
 .consent-list {
   margin: 16px 0 0 20px;
   padding: 0;

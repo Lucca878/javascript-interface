@@ -59,5 +59,11 @@ SELECT
   csv_row_json->>'motivation' AS motivation,
   csv_row_json->>'strategies' AS strategies,
   csv_row_json->>'feedback_text' AS feedback_text,
+  csv_row_json->>'attention_check_q1_answer' AS attention_check_q1_answer,
+  csv_row_json->>'attention_check_q2_answer' AS attention_check_q2_answer,
+  csv_row_json->>'attention_check_q1_correct' AS attention_check_q1_correct,
+  csv_row_json->>'attention_check_q2_correct' AS attention_check_q2_correct,
+  csv_row_json->>'attention_check_score' AS attention_check_score,
+  csv_row_json->>'attention_check_duration_ms' AS attention_check_duration_ms,
   csv_row_json->>'received_at' AS received_at
 FROM results;

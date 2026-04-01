@@ -10,10 +10,10 @@ window.renderTaskPage = function renderTaskPage(app) {
   const latestPredictionMarkup = taskSession.latestPrediction
     ? `
       <div class="task-panel">
-        <h2 class="task-panel-title">Latest rewrite feedback</h2>
-        <p class="task-summary"><strong>Your rewrite:</strong> ${utils.escapeHtml(taskSession.lastRewrite)}</p>
+        <h2 class="task-panel-title">Latest modification feedback</h2>
+        <p class="task-summary"><strong>Your modification:</strong> ${utils.escapeHtml(taskSession.lastRewrite)}</p>
         <p class="task-summary">
-          The AI now classifies your rewrite as <strong>${taskSession.latestPrediction.labelStr.toUpperCase()}</strong>
+          The AI now classifies your modification as <strong>${taskSession.latestPrediction.labelStr.toUpperCase()}</strong>
           with a confidence score of <strong>${taskSession.latestPrediction.confidence.toFixed(2)}%</strong>.
         </p>
         <div class="confidence-bar-wrap">
@@ -32,12 +32,12 @@ window.renderTaskPage = function renderTaskPage(app) {
     ? `
       <div class="task-panel history-panel">
         <details class="history-details">
-          <summary class="history-summary">See previous rewrites (${previousAttempts.length})</summary>
+          <summary class="history-summary">See previous modifications (${previousAttempts.length})</summary>
           <div class="history-list">
             ${previousAttempts.map((attempt) => `
               <article class="history-item">
                 <h3 class="history-item-title">Attempt ${attempt.attemptNumber}</h3>
-                <p class="task-summary"><strong>Rewrite:</strong> ${utils.escapeHtml(attempt.rewriteText)}</p>
+                <p class="task-summary"><strong>Modification:</strong> ${utils.escapeHtml(attempt.rewriteText)}</p>
                 <p class="task-summary">
                   Model feedback: <strong>${utils.escapeHtml(String(attempt.labelStr || "unknown")).toUpperCase()}</strong>
                   at <strong>${Number(attempt.confidence || 0).toFixed(2)}%</strong> confidence.
@@ -67,7 +67,7 @@ window.renderTaskPage = function renderTaskPage(app) {
   const rewriteControlsMarkup = taskSession.isComplete
     ? ""
     : `
-    <label class="task-label" for="taskRewriteInput">Write your rewrite below</label>
+    <label class="task-label" for="taskRewriteInput">Write your modification below</label>
     <textarea
       id="taskRewriteInput"
       class="task-textarea"
@@ -82,7 +82,7 @@ window.renderTaskPage = function renderTaskPage(app) {
     `;
   const submitButtonMarkup = taskSession.isComplete
     ? ""
-    : '<button class="button" id="taskSubmitButton">Submit rewrite</button>';
+    : '<button class="button" id="taskSubmitButton">Submit modification</button>';
 
   appRoot.innerHTML = `
     <h1 class="title">Main Task</h1>
@@ -114,10 +114,10 @@ window.renderTaskPage = function renderTaskPage(app) {
       <div class="task-panel">
         <h2 class="task-panel-title">Task goal</h2>
         <p class="task-summary">
-          Rewrite the statement so that it appears <strong>${targetLabel.toUpperCase()}</strong> to the AI while preserving meaning, grammar, and naturalness.
+          Modify the statement so that it appears <strong>${targetLabel.toUpperCase()}</strong> to the AI while preserving meaning, grammar, and naturalness.
         </p>
         <p class="task-summary">
-          Your rewrite must stay within <strong>${originalWordCount} +/- 20 words</strong>. You have used <strong>${taskSession.attemptsUsed}</strong> of <strong>${taskSession.maxAttempts}</strong> attempts.
+          Your modification must stay within <strong>${originalWordCount} +/- 20 words</strong>. You have used <strong>${taskSession.attemptsUsed}</strong> of <strong>${taskSession.maxAttempts}</strong> attempts.
         </p>
       </div>
     </div>

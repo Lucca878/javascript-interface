@@ -3,7 +3,7 @@ window.renderConsentPage = function renderConsentPage(app) {
   const appRoot = document.getElementById("app");
 
   appRoot.innerHTML = `
-    <h1 class="title">Informed Consent</h1>
+    <h1 class="title">Information and Consent</h1>
 
     <p class="lead">
       This study is conducted by researchers at Tilburg University and the

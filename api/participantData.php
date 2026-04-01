@@ -126,6 +126,8 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 
 	$feedbackFormData = getNested($payload, ['pages', 'feedback', 'formData'], []);
 	$strategies = is_array($feedbackFormData) ? ($feedbackFormData['strategies'] ?? '') : '';
+	$attentionResponses = getNested($payload, ['pages', 'attentionCheck', 'responses'], []);
+	$attentionCorrectAnswers = getNested($payload, ['pages', 'attentionCheck', 'correctAnswers'], []);
 
 	$row = [
 		'session_id' => scalarToString($payload['sessionId'] ?? ''),
@@ -154,6 +156,12 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 	$row['motivation'] = scalarToString(is_array($feedbackFormData) ? ($feedbackFormData['motivation'] ?? '') : '');
 	$row['strategies'] = scalarToString($strategies);
 	$row['feedback_text'] = scalarToString(is_array($feedbackFormData) ? ($feedbackFormData['feedbackText'] ?? '') : '');
+	$row['attention_check_q1_answer'] = scalarToString(is_array($attentionResponses) ? ($attentionResponses['q1'] ?? '') : '');
+	$row['attention_check_q2_answer'] = scalarToString(is_array($attentionResponses) ? ($attentionResponses['q2'] ?? '') : '');
+	$row['attention_check_q1_correct'] = scalarToString(is_array($attentionCorrectAnswers) ? ($attentionCorrectAnswers['q1'] ?? '') : '');
+	$row['attention_check_q2_correct'] = scalarToString(is_array($attentionCorrectAnswers) ? ($attentionCorrectAnswers['q2'] ?? '') : '');
+	$row['attention_check_score'] = scalarToString(getNested($payload, ['pages', 'attentionCheck', 'score'], ''));
+	$row['attention_check_duration_ms'] = scalarToString(getNested($payload, ['pages', 'attentionCheck', 'duration'], ''));
 	$row['received_at'] = $receivedAt;
 
 	return $row;

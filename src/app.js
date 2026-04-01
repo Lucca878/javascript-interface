@@ -128,6 +128,13 @@ window.app = {
     renderInstructionsPage(this);
   },
 
+  showAttentionCheckPage() {
+    this.trackScreenTransition("attentionCheck");
+    storage.setCurrentScreen("attentionCheck");
+    this.pushHistoryState("attentionCheck");
+    renderAttentionCheckPage(this);
+  },
+
   showEndPage() {
     this.trackScreenTransition("end");
 
@@ -522,6 +529,12 @@ window.app = {
       return;
     }
 
+    if (storedScreen === "attentionCheck") {
+      this.ensurePageEnter("attentionCheck");
+      renderAttentionCheckPage(this);
+      return;
+    }
+
     if (storedScreen === "instructions") {
       this.ensurePageEnter("instructions");
       renderInstructionsPage(this);
@@ -581,9 +594,46 @@ window.app = {
   },
 
   handleInstructionsNext() {
-    this.showTaskPage();
+    this.showAttentionCheckPage();
 
     console.log("Instructions completed");
+  },
+
+  handleAttentionCheckSubmit() {
+    const q1Input = document.querySelector('input[name="q1"]:checked');
+    const q2Input = document.querySelector('input[name="q2"]:checked');
+    const attentionPage = state.sessionData.pages.attentionCheck;
+
+    if (!q1Input || !q2Input) {
+      attentionPage.statusMessage = "Please answer both attention-check questions before continuing.";
+      attentionPage.statusType = "warning";
+      storage.setSessionData(state.sessionData);
+      renderAttentionCheckPage(this);
+      return;
+    }
+
+    const responses = {
+      q1: q1Input.value,
+      q2: q2Input.value
+    };
+
+    const correctAnswers = {
+      q1: "C",
+      q2: "C"
+    };
+
+    const score = Number(responses.q1 === correctAnswers.q1) + Number(responses.q2 === correctAnswers.q2);
+
+    if (typeof window.recordAttentionCheck === "function") {
+      window.recordAttentionCheck({
+        responses,
+        correctAnswers,
+        score,
+        allCorrect: score === 2
+      });
+    }
+
+    this.showTaskPage();
   },
 
   async handleTaskSubmit() {

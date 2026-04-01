@@ -11,11 +11,11 @@ window.renderWelcomePage = function renderWelcomePage(app) {
   const appRoot = document.getElementById("app");
 
   appRoot.innerHTML = `
-    <h1 class="title">Welcome to the <em>'REWRITING TRUTHS AND LIES'</em> study</h1>
+    <h1 class="title">Welcome to our study <em>'REWRITING TRUTHS AND LIES'</em></h1>
 
     <p class="lead">
-      In this study, your task is to interact with an AI model that classifies
-      statements as truthful or deceptive.
+      Your task is to interact with an AI model that has been trained to identify 
+      statements written by human participants as truthful or deceptive.
     </p>
 
     <p class="lead">

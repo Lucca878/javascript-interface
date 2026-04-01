@@ -9,7 +9,7 @@ window.renderInstructionsPage = function renderInstructionsPage(app) {
     <p class="lead">
       In this experiment, you will read <strong>1</strong> short statement written by
       participants in another study. This statement is either <strong>truthful</strong>
-      or <strong>deceptive</strong>. Some statements have been truncated.
+      or <strong>deceptive</strong>. Some statements have been shortened.
     </p>
 
     <p class="lead">
@@ -27,8 +27,8 @@ window.renderInstructionsPage = function renderInstructionsPage(app) {
     </p>
 
     <p class="lead">
-      Your task is to <strong>rewrite</strong> this statement with a specific task
-      in mind. Specifically, your task is to rewrite or paraphrase the statement so
+      Your task is to <strong>modify</strong> this statement with a specific task
+      in mind. Specifically, your task is to modify or paraphrase the statement so
       that it is classified as the opposite by the model. For example, when the
       original prediction is that a statement is truthful, you need to modify it so
       that it is classified as deceptive. Vice versa, when a statement is initially
@@ -50,7 +50,7 @@ window.renderInstructionsPage = function renderInstructionsPage(app) {
       </p>
 
       <p class="lead instructions-emphasis">
-        <strong>Please read and rewrite the statement carefully.</strong>
+        <strong>Please read and modify the statement carefully.</strong>
       </p>
     </div>
 

@@ -119,6 +119,19 @@ window.recordFeedback = function(formData) {
   console.log(`[Session] Recorded feedback submission`);
 };
 
+window.recordAttentionCheck = function(payload) {
+  state.sessionData.pages.attentionCheck.responses = payload.responses;
+  state.sessionData.pages.attentionCheck.correctAnswers = payload.correctAnswers;
+  state.sessionData.pages.attentionCheck.score = payload.score;
+  state.sessionData.pages.attentionCheck.allCorrect = payload.allCorrect;
+  state.sessionData.pages.attentionCheck.submittedAt = new Date().toISOString();
+  state.sessionData.pages.attentionCheck.statusMessage = "";
+  state.sessionData.pages.attentionCheck.statusType = "info";
+
+  persistSessionData();
+  console.log("[Session] Recorded attention-check responses");
+};
+
 // Record session completion
 window.recordSessionEnd = function() {
   state.sessionData.sessionEndTime = new Date().toISOString();

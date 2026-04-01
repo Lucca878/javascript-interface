@@ -89,6 +89,17 @@ describe("app core", function () {
     expect(document.getElementById("taskSubmitButton")).not.toBeNull();
   });
 
+  it("restores the attention-check page when the stored screen is attentionCheck", function () {
+    spyOn(app, "getProlificIdFromUrl").and.returnValue(null);
+    storage.setParticipantId("stored-001");
+    storage.setCurrentScreen("attentionCheck");
+
+    app.init();
+
+    expect(document.getElementById("app").textContent).toContain("Comprehension");
+    expect(document.getElementById("attentionCheckNextButton")).not.toBeNull();
+  });
+
   it("restores the feedback page when the stored screen is feedback", function () {
     spyOn(app, "getProlificIdFromUrl").and.returnValue(null);
     storage.setParticipantId("stored-001");
@@ -183,6 +194,16 @@ describe("app core", function () {
 
     expect(storage.getCurrentScreen()).toBe("task");
     expect(app.pushHistoryState).toHaveBeenCalledWith("task");
+  });
+
+  it("stores the current screen and pushes history when showing the attention-check page", function () {
+    spyOn(app, "pushHistoryState");
+    testHelpers.mountAppContainer();
+
+    app.showAttentionCheckPage();
+
+    expect(storage.getCurrentScreen()).toBe("attentionCheck");
+    expect(app.pushHistoryState).toHaveBeenCalledWith("attentionCheck");
   });
 
   it("stores the current screen and pushes history when showing the feedback page", function () {
