@@ -64,6 +64,8 @@ SELECT
   csv_row_json->>'attention_check_q1_correct' AS attention_check_q1_correct,
   csv_row_json->>'attention_check_q2_correct' AS attention_check_q2_correct,
   csv_row_json->>'attention_check_score' AS attention_check_score,
+  csv_row_json->>'attention_check_num_correct' AS attention_check_num_correct,
+  csv_row_json->>'attention_check_all_correct' AS attention_check_all_correct,
   csv_row_json->>'attention_check_duration_ms' AS attention_check_duration_ms,
   csv_row_json->>'received_at' AS received_at
 FROM results;

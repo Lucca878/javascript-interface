@@ -128,6 +128,19 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 	$strategies = is_array($feedbackFormData) ? ($feedbackFormData['strategies'] ?? '') : '';
 	$attentionResponses = getNested($payload, ['pages', 'attentionCheck', 'responses'], []);
 	$attentionCorrectAnswers = getNested($payload, ['pages', 'attentionCheck', 'correctAnswers'], []);
+	$q1Answer = scalarToString(is_array($attentionResponses) ? ($attentionResponses['q1'] ?? '') : '');
+	$q2Answer = scalarToString(is_array($attentionResponses) ? ($attentionResponses['q2'] ?? '') : '');
+	$q1Expected = scalarToString(is_array($attentionCorrectAnswers) ? ($attentionCorrectAnswers['q1'] ?? '') : '');
+	$q2Expected = scalarToString(is_array($attentionCorrectAnswers) ? ($attentionCorrectAnswers['q2'] ?? '') : '');
+	$q1IsCorrect = ($q1Answer !== '' && $q1Expected !== '' && $q1Answer === $q1Expected) ? '1' : '0';
+	$q2IsCorrect = ($q2Answer !== '' && $q2Expected !== '' && $q2Answer === $q2Expected) ? '1' : '0';
+	$computedNumCorrect = ((int) $q1IsCorrect) + ((int) $q2IsCorrect);
+	$scoreRaw = getNested($payload, ['pages', 'attentionCheck', 'score'], null);
+	$numCorrect = ($scoreRaw === null || $scoreRaw === '') ? (string) $computedNumCorrect : scalarToString($scoreRaw);
+	$allCorrectRaw = getNested($payload, ['pages', 'attentionCheck', 'allCorrect'], null);
+	$allCorrect = ($allCorrectRaw === null || $allCorrectRaw === '')
+		? ($computedNumCorrect === 2 ? '1' : '0')
+		: scalarToString($allCorrectRaw);
 
 	$row = [
 		'session_id' => scalarToString($payload['sessionId'] ?? ''),
@@ -156,11 +169,13 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 	$row['motivation'] = scalarToString(is_array($feedbackFormData) ? ($feedbackFormData['motivation'] ?? '') : '');
 	$row['strategies'] = scalarToString($strategies);
 	$row['feedback_text'] = scalarToString(is_array($feedbackFormData) ? ($feedbackFormData['feedbackText'] ?? '') : '');
-	$row['attention_check_q1_answer'] = scalarToString(is_array($attentionResponses) ? ($attentionResponses['q1'] ?? '') : '');
-	$row['attention_check_q2_answer'] = scalarToString(is_array($attentionResponses) ? ($attentionResponses['q2'] ?? '') : '');
-	$row['attention_check_q1_correct'] = scalarToString(is_array($attentionCorrectAnswers) ? ($attentionCorrectAnswers['q1'] ?? '') : '');
-	$row['attention_check_q2_correct'] = scalarToString(is_array($attentionCorrectAnswers) ? ($attentionCorrectAnswers['q2'] ?? '') : '');
-	$row['attention_check_score'] = scalarToString(getNested($payload, ['pages', 'attentionCheck', 'score'], ''));
+	$row['attention_check_q1_answer'] = $q1Answer;
+	$row['attention_check_q2_answer'] = $q2Answer;
+	$row['attention_check_q1_correct'] = $q1IsCorrect;
+	$row['attention_check_q2_correct'] = $q2IsCorrect;
+	$row['attention_check_score'] = $numCorrect;
+	$row['attention_check_num_correct'] = $numCorrect;
+	$row['attention_check_all_correct'] = $allCorrect;
 	$row['attention_check_duration_ms'] = scalarToString(getNested($payload, ['pages', 'attentionCheck', 'duration'], ''));
 	$row['received_at'] = $receivedAt;
 
