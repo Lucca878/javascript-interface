@@ -414,10 +414,12 @@ window.app = {
 
   getDefaultFeedbackSession() {
     return {
-      motivationScale: 5,
-      difficultyScale: 5,
+      motivationScale: 4,
+      difficultyScale: 4,
       motivationAnswered: false,
       difficultyAnswered: false,
+      taskGoalAnswer: null,
+      taskGoalAnswered: false,
       strategies: "",
       feedback: "",
       statusMessage: "",
@@ -468,7 +470,8 @@ window.app = {
     if (
       !feedbackSession.strategies.trim() ||
       !feedbackSession.motivationAnswered ||
-      !feedbackSession.difficultyAnswered
+      !feedbackSession.difficultyAnswered ||
+      !feedbackSession.taskGoalAnswered
     ) {
       feedbackSession.statusMessage = "Please answer all required questions before submitting.";
       feedbackSession.statusType = "warning";
@@ -486,6 +489,7 @@ window.app = {
       pid: state.participantId,
       motivation_scale: feedbackSession.motivationScale,
       difficulty_scale: feedbackSession.difficultyScale,
+      task_goal_answer: feedbackSession.taskGoalAnswer,
       strategies: feedbackSession.strategies,
       feedback: feedbackSession.feedback,
       submittedAt: new Date().toISOString()
@@ -496,6 +500,7 @@ window.app = {
       window.recordFeedback({
         difficulty: feedbackSession.difficultyScale,
         motivation: feedbackSession.motivationScale,
+        taskGoalAnswer: feedbackSession.taskGoalAnswer,
         strategies: feedbackSession.strategies,
         feedbackText: feedbackSession.feedback
       });
@@ -632,7 +637,7 @@ window.app = {
 
     const correctAnswers = {
       q1: "C",
-      q2: "C"
+      q2: "B"
     };
 
     const score = Number(responses.q1 === correctAnswers.q1) + Number(responses.q2 === correctAnswers.q2);

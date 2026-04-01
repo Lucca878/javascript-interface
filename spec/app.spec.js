@@ -128,7 +128,7 @@ describe("app core", function () {
     storage.setCurrentScreen("feedback");
     storage.setFeedbackSession({
       motivationScale: 4,
-      difficultyScale: 8,
+      difficultyScale: 7,
       strategies: "I altered narrative style and structure.",
       feedback: "Smooth flow.",
       statusMessage: "",
@@ -139,7 +139,7 @@ describe("app core", function () {
     app.init();
 
     expect(document.getElementById("motivationScaleInput").value).toBe("4");
-    expect(document.getElementById("difficultyScaleInput").value).toBe("8");
+    expect(document.getElementById("difficultyScaleInput").value).toBe("7");
     expect(document.getElementById("strategiesInput").value).toContain("narrative style");
     expect(document.getElementById("feedbackInput").value).toBe("Smooth flow.");
   });

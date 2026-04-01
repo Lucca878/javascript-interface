@@ -30,7 +30,7 @@ describe("attention check page", function () {
     spyOn(app, "showTaskReminderPage");
 
     document.querySelector('input[name="q1"][value="C"]').checked = true;
-    document.querySelector('input[name="q2"][value="C"]').checked = true;
+    document.querySelector('input[name="q2"][value="B"]').checked = true;
     document.getElementById("attentionCheckNextButton").click();
 
     expect(window.recordAttentionCheck).toHaveBeenCalled();

@@ -20,7 +20,7 @@ window.renderAttentionCheckPage = function renderAttentionCheckPage(app) {
 
     <form id="attentionCheckForm">
       <fieldset class="question-box">
-        <legend class="lead"><strong>1)</strong> In the model output, what do the label and confidence score mean?</legend>
+        <legend class="lead">In the model output, what do the label and confidence score mean?</legend>
         <label class="option-row">
           <input type="radio" name="q1" value="A" ${responses.q1 === "A" ? "checked" : ""} />
           The label is the percentage score, and confidence is whether it is truthful or deceptive.
@@ -40,18 +40,18 @@ window.renderAttentionCheckPage = function renderAttentionCheckPage(app) {
       </fieldset>
 
       <fieldset class="question-box">
-        <legend class="lead"><strong>2)</strong> How many attempts do you have to modify the statement?</legend>
+        <legend class="lead">How many attempts do you have to modify the statement?</legend>
         <label class="option-row">
           <input type="radio" name="q2" value="A" ${responses.q2 === "A" ? "checked" : ""} />
           3 attempts
         </label>
         <label class="option-row">
           <input type="radio" name="q2" value="B" ${responses.q2 === "B" ? "checked" : ""} />
-          5 attempts
+          10 attempts
         </label>
         <label class="option-row">
           <input type="radio" name="q2" value="C" ${responses.q2 === "C" ? "checked" : ""} />
-          10 attempts
+          5 attempts
         </label>
         <label class="option-row">
           <input type="radio" name="q2" value="D" ${responses.q2 === "D" ? "checked" : ""} />

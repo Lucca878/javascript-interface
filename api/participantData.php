@@ -130,17 +130,21 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 	$attentionCorrectAnswers = getNested($payload, ['pages', 'attentionCheck', 'correctAnswers'], []);
 	$q1Answer = scalarToString(is_array($attentionResponses) ? ($attentionResponses['q1'] ?? '') : '');
 	$q2Answer = scalarToString(is_array($attentionResponses) ? ($attentionResponses['q2'] ?? '') : '');
+	$q3Answer = scalarToString(is_array($feedbackFormData) ? ($feedbackFormData['taskGoalAnswer'] ?? '') : '');
 	$q1Expected = scalarToString(is_array($attentionCorrectAnswers) ? ($attentionCorrectAnswers['q1'] ?? '') : '');
 	$q2Expected = scalarToString(is_array($attentionCorrectAnswers) ? ($attentionCorrectAnswers['q2'] ?? '') : '');
+	$q3Expected = 'B';
 	$q1IsCorrect = ($q1Answer !== '' && $q1Expected !== '' && $q1Answer === $q1Expected) ? '1' : '0';
 	$q2IsCorrect = ($q2Answer !== '' && $q2Expected !== '' && $q2Answer === $q2Expected) ? '1' : '0';
+	$q3IsCorrect = ($q3Answer !== '' && $q3Answer === $q3Expected) ? '1' : '0';
 	$computedNumCorrect = ((int) $q1IsCorrect) + ((int) $q2IsCorrect);
 	$scoreRaw = getNested($payload, ['pages', 'attentionCheck', 'score'], null);
-	$numCorrect = ($scoreRaw === null || $scoreRaw === '') ? (string) $computedNumCorrect : scalarToString($scoreRaw);
+	$numCorrectQ1Q2 = ($scoreRaw === null || $scoreRaw === '') ? (int) $computedNumCorrect : (int) scalarToString($scoreRaw);
+	$numCorrect = (string) ($numCorrectQ1Q2 + (int) $q3IsCorrect);
 	$allCorrectRaw = getNested($payload, ['pages', 'attentionCheck', 'allCorrect'], null);
 	$allCorrect = ($allCorrectRaw === null || $allCorrectRaw === '')
-		? ($computedNumCorrect === 2 ? '1' : '0')
-		: scalarToString($allCorrectRaw);
+		? (((int) $numCorrect === 3) ? '1' : '0')
+		: ((((int) scalarToString($allCorrectRaw)) === 1 && $q3IsCorrect === '1') ? '1' : '0');
 
 	$row = [
 		'session_id' => scalarToString($payload['sessionId'] ?? ''),
@@ -169,10 +173,13 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 	$row['motivation'] = scalarToString(is_array($feedbackFormData) ? ($feedbackFormData['motivation'] ?? '') : '');
 	$row['strategies'] = scalarToString($strategies);
 	$row['feedback_text'] = scalarToString(is_array($feedbackFormData) ? ($feedbackFormData['feedbackText'] ?? '') : '');
+	$row['task_goal_answer'] = scalarToString(is_array($feedbackFormData) ? ($feedbackFormData['taskGoalAnswer'] ?? '') : '');
 	$row['attention_check_q1_answer'] = $q1Answer;
 	$row['attention_check_q2_answer'] = $q2Answer;
+	$row['attention_check_q3_answer'] = $q3Answer;
 	$row['attention_check_q1_correct'] = $q1IsCorrect;
 	$row['attention_check_q2_correct'] = $q2IsCorrect;
+	$row['attention_check_q3_correct'] = $q3IsCorrect;
 	$row['attention_check_score'] = $numCorrect;
 	$row['attention_check_num_correct'] = $numCorrect;
 	$row['attention_check_all_correct'] = $allCorrect;

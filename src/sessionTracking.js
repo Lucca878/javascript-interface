@@ -111,6 +111,7 @@ window.recordFeedback = function(formData) {
   state.sessionData.pages.feedback.formData = {
     difficulty: formData.difficulty,
     motivation: formData.motivation,
+    taskGoalAnswer: formData.taskGoalAnswer,
     strategies: formData.strategies,
     feedbackText: formData.feedbackText,
     timestamp: new Date().toISOString()
