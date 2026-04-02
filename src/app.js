@@ -108,6 +108,12 @@ window.app = {
     // Prime one extra history entry so the first back press is always trapped in-app.
     this.pushHistoryState(currentScreen);
 
+    // Some browsers can still skip the first trap on the initial welcome load.
+    // Add one more welcome-only entry to reliably catch the first back press.
+    if (currentScreen === "welcome") {
+      this.pushHistoryState(currentScreen);
+    }
+
     window.addEventListener("popstate", () => {
       this.handlePopState();
     });
