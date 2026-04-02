@@ -87,10 +87,10 @@ window.app = {
   },
 
   handlePopState() {
-    const currentScreen = storage.getCurrentScreen();
+    const currentScreen = storage.getCurrentScreen() || "welcome";
 
-    // If they're trying to go back before the study started, confirm before leaving
-    if (!currentScreen) {
+    // If they're on the welcome page and press back, they're trying to leave the study
+    if (currentScreen === "welcome") {
       const confirmed = window.confirm(
         "You are about to leave the study. Are you sure you want to exit?"
       );
@@ -101,8 +101,7 @@ window.app = {
       }
     }
 
-    const screenToRestore = currentScreen || "welcome";
-    this.replaceHistoryState(screenToRestore);
+    this.replaceHistoryState(currentScreen);
     this.restoreScreen();
   },
 

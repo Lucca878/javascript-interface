@@ -258,8 +258,8 @@ describe("app core", function () {
     expect(app.restoreScreen).toHaveBeenCalled();
   });
 
-  it("shows a confirmation dialog when trying to back out of the study", function () {
-    storage.clearCurrentScreen();
+  it("shows a confirmation dialog when trying to back out of the study from welcome page", function () {
+    storage.setCurrentScreen("welcome");
     spyOn(window, "confirm").and.returnValue(true);
     spyOn(window.history, "forward");
     spyOn(app, "restoreScreen");
@@ -272,7 +272,7 @@ describe("app core", function () {
   });
 
   it("prevents leaving the study when user cancels the confirmation dialog", function () {
-    storage.clearCurrentScreen();
+    storage.setCurrentScreen("welcome");
     spyOn(window, "confirm").and.returnValue(false);
     spyOn(window.history, "forward");
     spyOn(app, "restoreScreen");
