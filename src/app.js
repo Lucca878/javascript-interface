@@ -1,4 +1,6 @@
 window.app = {
+  _hasShownBackNavigationWarning: false,
+
   getProlificIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
     return params.get("PROLIFIC_PID");
@@ -86,8 +88,16 @@ window.app = {
     }
   },
 
-  handlePopState() {
+  handlePopState(event) {
     const currentScreen = storage.getCurrentScreen() || "welcome";
+
+    if (!this._hasShownBackNavigationWarning) {
+      window.alert(
+        "Back navigation is disabled in this study. Repeated attempts may cause you to leave the study. Please use the on-screen buttons."
+      );
+      this._hasShownBackNavigationWarning = true;
+    }
+
     this.replaceHistoryState(currentScreen);
     this.restoreScreen();
   },
@@ -97,15 +107,6 @@ window.app = {
 
     window.addEventListener("popstate", () => {
       this.handlePopState();
-    });
-
-    // Browser-native leave warning for reload/close/navigation away.
-    window.addEventListener("beforeunload", (event) => {
-      const currentScreen = storage.getCurrentScreen();
-      if (currentScreen && currentScreen !== "end") {
-        event.preventDefault();
-        event.returnValue = "";
-      }
     });
   },
 

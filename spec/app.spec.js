@@ -7,6 +7,7 @@ describe("app core", function () {
   afterEach(function () {
     testHelpers.clearTestRoot();
     delete window.APP_CONFIG;
+    app._hasShownBackNavigationWarning = false;
   });
 
   it("generates a fallback participant ID when none exists", function () {
@@ -249,13 +250,27 @@ describe("app core", function () {
 
   it("restores the stored screen when popstate is handled", function () {
     storage.setCurrentScreen("instructions");
+    spyOn(window, "alert");
     spyOn(app, "restoreScreen");
     spyOn(app, "replaceHistoryState");
 
     app.handlePopState();
 
+    expect(window.alert).toHaveBeenCalledWith(
+      "Back navigation is disabled in this study. Repeated attempts may cause you to leave the study. Please use the on-screen buttons."
+    );
     expect(app.replaceHistoryState).toHaveBeenCalledWith("instructions");
     expect(app.restoreScreen).toHaveBeenCalled();
+  });
+
+  it("shows the back warning only once", function () {
+    storage.setCurrentScreen("instructions");
+    spyOn(window, "alert");
+
+    app.handlePopState();
+    app.handlePopState();
+
+    expect(window.alert).toHaveBeenCalledTimes(1);
   });
 
   it("registers a popstate listener when setting up the history guard", function () {
@@ -266,7 +281,6 @@ describe("app core", function () {
 
     expect(app.replaceHistoryState).toHaveBeenCalled();
     expect(window.addEventListener).toHaveBeenCalledWith("popstate", jasmine.any(Function));
-    expect(window.addEventListener).toHaveBeenCalledWith("beforeunload", jasmine.any(Function));
   });
 
   it("shows a loading state on task page while PHP corpus is still loading", function () {
