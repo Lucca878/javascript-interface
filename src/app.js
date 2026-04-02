@@ -87,8 +87,22 @@ window.app = {
   },
 
   handlePopState() {
-    const currentScreen = storage.getCurrentScreen() || "welcome";
-    this.replaceHistoryState(currentScreen);
+    const currentScreen = storage.getCurrentScreen();
+
+    // If they're trying to go back before the study started, confirm before leaving
+    if (!currentScreen) {
+      const confirmed = window.confirm(
+        "You are about to leave the study. Are you sure you want to exit?"
+      );
+
+      if (!confirmed) {
+        window.history.forward();
+        return;
+      }
+    }
+
+    const screenToRestore = currentScreen || "welcome";
+    this.replaceHistoryState(screenToRestore);
     this.restoreScreen();
   },
 

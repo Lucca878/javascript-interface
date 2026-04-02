@@ -257,6 +257,33 @@ describe("app core", function () {
     expect(app.replaceHistoryState).toHaveBeenCalledWith("instructions");
     expect(app.restoreScreen).toHaveBeenCalled();
   });
+
+  it("shows a confirmation dialog when trying to back out of the study", function () {
+    storage.clearCurrentScreen();
+    spyOn(window, "confirm").and.returnValue(true);
+    spyOn(window.history, "forward");
+    spyOn(app, "restoreScreen");
+
+    app.handlePopState();
+
+    expect(window.confirm).toHaveBeenCalledWith("You are about to leave the study. Are you sure you want to exit?");
+    expect(window.history.forward).not.toHaveBeenCalled();
+    expect(app.restoreScreen).toHaveBeenCalled();
+  });
+
+  it("prevents leaving the study when user cancels the confirmation dialog", function () {
+    storage.clearCurrentScreen();
+    spyOn(window, "confirm").and.returnValue(false);
+    spyOn(window.history, "forward");
+    spyOn(app, "restoreScreen");
+
+    app.handlePopState();
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(window.history.forward).toHaveBeenCalled();
+    expect(app.restoreScreen).not.toHaveBeenCalled();
+  });
+
   it("registers a popstate listener when setting up the history guard", function () {
     spyOn(window, "addEventListener");
     spyOn(app, "replaceHistoryState");
