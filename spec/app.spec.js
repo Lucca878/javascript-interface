@@ -10,6 +10,7 @@ describe("app core", function () {
     // Reset back press tracking for tests
     app._backPressCount = 0;
     app._lastBackPressScreen = null;
+    app._historyIndex = 0;
   });
 
   it("generates a fallback participant ID when none exists", function () {
@@ -325,6 +326,18 @@ describe("app core", function () {
     spyOn(app, "restoreScreen");
 
     app.handlePopState();
+
+    expect(window.confirm).not.toHaveBeenCalled();
+    expect(app.restoreScreen).toHaveBeenCalled();
+  });
+
+  it("does not show warning when popstate represents forward navigation", function () {
+    storage.setCurrentScreen("consent");
+    app._historyIndex = 2;
+    spyOn(window, "confirm");
+    spyOn(app, "restoreScreen");
+
+    app.handlePopState({ state: { historyIndex: 3 } });
 
     expect(window.confirm).not.toHaveBeenCalled();
     expect(app.restoreScreen).toHaveBeenCalled();

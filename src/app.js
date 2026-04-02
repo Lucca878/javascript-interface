@@ -1,6 +1,7 @@
 window.app = {
   _backPressCount: 0,
   _lastBackPressScreen: null,
+  _historyIndex: 0,
 
   // Map each screen to its depth in the study flow
   pageDepth: {
@@ -66,11 +67,20 @@ window.app = {
   },
 
   pushHistoryState(screenName) {
-    window.history.pushState({ screen: screenName }, "", window.location.href);
+    this._historyIndex += 1;
+    window.history.pushState(
+      { screen: screenName, historyIndex: this._historyIndex },
+      "",
+      window.location.href
+    );
   },
 
   replaceHistoryState(screenName) {
-    window.history.replaceState({ screen: screenName }, "", window.location.href);
+    window.history.replaceState(
+      { screen: screenName, historyIndex: this._historyIndex },
+      "",
+      window.location.href
+    );
   },
 
   trackScreenTransition(nextScreen) {
@@ -102,8 +112,25 @@ window.app = {
     }
   },
 
-  handlePopState() {
+  handlePopState(event) {
     const currentScreen = storage.getCurrentScreen() || "welcome";
+    const nextHistoryIndex =
+      event && event.state && typeof event.state.historyIndex === "number"
+        ? event.state.historyIndex
+        : null;
+    const isBackNavigation =
+      nextHistoryIndex === null ? true : nextHistoryIndex < this._historyIndex;
+
+    if (nextHistoryIndex !== null) {
+      this._historyIndex = nextHistoryIndex;
+    }
+
+    // Forward navigation should never show the leave warning.
+    if (!isBackNavigation) {
+      this.replaceHistoryState(currentScreen);
+      this.restoreScreen();
+      return;
+    }
 
     // Track consecutive back presses on the same screen
     if (currentScreen === this._lastBackPressScreen) {
@@ -138,10 +165,17 @@ window.app = {
   },
 
   setupHistoryGuard() {
+    if (
+      window.history.state &&
+      typeof window.history.state.historyIndex === "number"
+    ) {
+      this._historyIndex = window.history.state.historyIndex;
+    }
+
     this.replaceHistoryState(storage.getCurrentScreen() || "welcome");
 
-    window.addEventListener("popstate", () => {
-      this.handlePopState();
+    window.addEventListener("popstate", (event) => {
+      this.handlePopState(event);
     });
   },
 
