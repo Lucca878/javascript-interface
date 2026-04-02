@@ -8,7 +8,6 @@ describe("app core", function () {
     testHelpers.clearTestRoot();
     delete window.APP_CONFIG;
     app._shownBackNavigationWarningScreens.clear();
-    app._hasShownWelcomeLeaveWarning = false;
   });
 
   it("generates a fallback participant ID when none exists", function () {
@@ -289,7 +288,6 @@ describe("app core", function () {
     expect(app.replaceHistoryState).toHaveBeenCalled();
     expect(app.pushHistoryState).toHaveBeenCalled();
     expect(window.addEventListener).toHaveBeenCalledWith("popstate", jasmine.any(Function));
-    expect(window.addEventListener).toHaveBeenCalledWith("beforeunload", jasmine.any(Function));
   });
 
   it("shows a loading state on task page while PHP corpus is still loading", function () {

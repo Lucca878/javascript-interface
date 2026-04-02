@@ -13,5 +13,3 @@ document.addEventListener(
 	true
 );
 
-// Karma's jasmine adapter treats beforeunload as a hard error. Clear it to avoid false positives.
-window.onbeforeunload = null;

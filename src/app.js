@@ -1,6 +1,5 @@
 window.app = {
   _shownBackNavigationWarningScreens: new Set(),
-  _hasShownWelcomeLeaveWarning: false,
 
   getProlificIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -109,24 +108,8 @@ window.app = {
     // Prime one extra history entry so the first back press is always trapped in-app.
     this.pushHistoryState(currentScreen);
 
-    // Some browsers can still skip the first trap on the initial welcome load.
-    // Add one more welcome-only entry to reliably catch the first back press.
-    if (currentScreen === "welcome") {
-      this.pushHistoryState(currentScreen);
-    }
-
     window.addEventListener("popstate", () => {
       this.handlePopState();
-    });
-
-    // Fallback for browsers where initial welcome back press may bypass popstate.
-    window.addEventListener("beforeunload", (event) => {
-      const activeScreen = storage.getCurrentScreen() || "welcome";
-      if (activeScreen === "welcome" && !this._hasShownWelcomeLeaveWarning) {
-        this._hasShownWelcomeLeaveWarning = true;
-        event.preventDefault();
-        event.returnValue = "";
-      }
     });
   },
 
