@@ -138,6 +138,13 @@ window.renderTaskPage = function renderTaskPage(app) {
     document
       .getElementById("taskSubmitButton")
       .addEventListener("click", () => app.handleTaskSubmit());
+
+    document
+      .getElementById("taskRewriteInput")
+      .addEventListener("input", (event) => {
+        taskSession.draftText = event.target.value;
+        storage.setTaskSession(taskSession);
+      });
   }
 
   if (taskSession.isComplete) {

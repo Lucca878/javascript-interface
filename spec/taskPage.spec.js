@@ -147,6 +147,19 @@ describe("task page", function () {
     );
   });
 
+  it("keeps typed draft text after re-rendering without submit", function () {
+    const draft = "I took the train to Rotterdam, met a friend, and drafted this line before submitting.";
+    const input = document.getElementById("taskRewriteInput");
+
+    input.value = draft;
+    input.dispatchEvent(new Event("input"));
+
+    app.showTaskPage();
+
+    expect(document.getElementById("taskRewriteInput").value).toBe(draft);
+    expect(storage.getTaskSession().draftText).toBe(draft);
+  });
+
   it("clears the textarea after a successful submission", async function () {
     spyOn(modelService, "getPrediction").and.returnValue({ label: 1, labelStr: "truthful", confidence: 80.0 });
     document.getElementById("taskRewriteInput").value = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
