@@ -1,8 +1,4 @@
 window.app = {
-  _lastPopStateScreen: null,
-  _backPressCount: 0,
-  _backPressTimeout: null,
-
   getProlificIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
     return params.get("PROLIFIC_PID");
@@ -92,38 +88,6 @@ window.app = {
 
   handlePopState() {
     const currentScreen = storage.getCurrentScreen() || "welcome";
-
-    // Track consecutive back presses on the same screen
-    if (currentScreen === this._lastPopStateScreen) {
-      this._backPressCount++;
-    } else {
-      this._backPressCount = 1;
-      this._lastPopStateScreen = currentScreen;
-    }
-
-    // After 5+ rapid back presses on the same screen, warn before leaving
-    if (this._backPressCount >= 5) {
-      const confirmed = window.confirm(
-        "You are about to leave the study. Are you sure you want to exit?"
-      );
-
-      if (!confirmed) {
-        window.history.forward();
-        this._backPressCount = 0; // Reset counter
-        return;
-      }
-
-      // If confirmed, allow them to leave
-      this._backPressCount = 0;
-    }
-
-    // Reset counter after 1 second of inactivity
-    clearTimeout(this._backPressTimeout);
-    this._backPressTimeout = setTimeout(() => {
-      this._backPressCount = 0;
-      this._lastPopStateScreen = null;
-    }, 1000);
-
     this.replaceHistoryState(currentScreen);
     this.restoreScreen();
   },

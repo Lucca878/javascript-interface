@@ -7,10 +7,6 @@ describe("app core", function () {
   afterEach(function () {
     testHelpers.clearTestRoot();
     delete window.APP_CONFIG;
-    // Reset back press tracking for tests
-    app._backPressCount = 0;
-    app._lastPopStateScreen = null;
-    clearTimeout(app._backPressTimeout);
   });
 
   it("generates a fallback participant ID when none exists", function () {
@@ -260,39 +256,6 @@ describe("app core", function () {
 
     expect(app.replaceHistoryState).toHaveBeenCalledWith("instructions");
     expect(app.restoreScreen).toHaveBeenCalled();
-  });
-
-  it("shows a confirmation dialog after 5 consecutive back presses on the same screen", function () {
-    storage.setCurrentScreen("feedback");
-    spyOn(window, "confirm").and.returnValue(true);
-    spyOn(window.history, "forward");
-    spyOn(app, "restoreScreen");
-
-    // Simulate 5 rapid back presses
-    for (let i = 0; i < 5; i++) {
-      app.handlePopState();
-    }
-
-    expect(window.confirm).toHaveBeenCalledWith("You are about to leave the study. Are you sure you want to exit?");
-    expect(window.history.forward).not.toHaveBeenCalled();
-    expect(app.restoreScreen).toHaveBeenCalled();
-  });
-
-  it("prevents leaving the study when user cancels after 5 back presses", function () {
-    storage.setCurrentScreen("task");
-    spyOn(window, "confirm").and.returnValue(false);
-    spyOn(window.history, "forward");
-    spyOn(app, "restoreScreen").and.callThrough();
-
-    // Simulate 5 rapid back presses
-    for (let i = 0; i < 5; i++) {
-      app.handlePopState();
-    }
-
-    expect(window.confirm).toHaveBeenCalled();
-    expect(window.history.forward).toHaveBeenCalled();
-    // First 4 presses call restoreScreen, 5th press (when dialog shown) doesn't
-    expect(app.restoreScreen).toHaveBeenCalledTimes(4);
   });
 
   it("registers a popstate listener when setting up the history guard", function () {
