@@ -7,7 +7,7 @@ describe("app core", function () {
   afterEach(function () {
     testHelpers.clearTestRoot();
     delete window.APP_CONFIG;
-    app._hasShownBackNavigationWarning = false;
+    app._shownBackNavigationWarningScreens.clear();
   });
 
   it("generates a fallback participant ID when none exists", function () {
@@ -263,7 +263,7 @@ describe("app core", function () {
     expect(app.restoreScreen).toHaveBeenCalled();
   });
 
-  it("shows the back warning only once", function () {
+  it("shows the back warning only once per screen", function () {
     storage.setCurrentScreen("instructions");
     spyOn(window, "alert");
 
@@ -271,15 +271,22 @@ describe("app core", function () {
     app.handlePopState();
 
     expect(window.alert).toHaveBeenCalledTimes(1);
+
+    storage.setCurrentScreen("consent");
+    app.handlePopState();
+
+    expect(window.alert).toHaveBeenCalledTimes(2);
   });
 
   it("registers a popstate listener when setting up the history guard", function () {
     spyOn(window, "addEventListener");
     spyOn(app, "replaceHistoryState");
+    spyOn(app, "pushHistoryState");
 
     app.setupHistoryGuard();
 
     expect(app.replaceHistoryState).toHaveBeenCalled();
+    expect(app.pushHistoryState).toHaveBeenCalled();
     expect(window.addEventListener).toHaveBeenCalledWith("popstate", jasmine.any(Function));
   });
 

@@ -1,5 +1,5 @@
 window.app = {
-  _hasShownBackNavigationWarning: false,
+  _shownBackNavigationWarningScreens: new Set(),
 
   getProlificIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -88,14 +88,14 @@ window.app = {
     }
   },
 
-  handlePopState(event) {
+  handlePopState() {
     const currentScreen = storage.getCurrentScreen() || "welcome";
 
-    if (!this._hasShownBackNavigationWarning) {
+    if (!this._shownBackNavigationWarningScreens.has(currentScreen)) {
       window.alert(
         "Back navigation is disabled in this study. Repeated attempts may cause you to leave the study. Please use the on-screen buttons."
       );
-      this._hasShownBackNavigationWarning = true;
+      this._shownBackNavigationWarningScreens.add(currentScreen);
     }
 
     this.replaceHistoryState(currentScreen);
@@ -103,7 +103,10 @@ window.app = {
   },
 
   setupHistoryGuard() {
-    this.replaceHistoryState(storage.getCurrentScreen() || "welcome");
+    const currentScreen = storage.getCurrentScreen() || "welcome";
+    this.replaceHistoryState(currentScreen);
+    // Prime one extra history entry so the first back press is always trapped in-app.
+    this.pushHistoryState(currentScreen);
 
     window.addEventListener("popstate", () => {
       this.handlePopState();
