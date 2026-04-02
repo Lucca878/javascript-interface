@@ -179,7 +179,6 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 	$row['attention_check_q1_correct'] = $q1IsCorrect;
 	$row['attention_check_q2_correct'] = $q2IsCorrect;
 	$row['attention_check_q3_correct'] = $q3IsCorrect;
-	$row['attention_check_score'] = $numCorrect;
 	$row['attention_check_num_correct'] = $numCorrect;
 	$row['attention_check_all_correct'] = $allCorrect;
 	$row['welcome_duration_ms'] = scalarToString(getNested($payload, ['pages', 'welcome', 'duration'], ''));

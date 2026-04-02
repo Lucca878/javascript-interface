@@ -1,11 +1,21 @@
 window.testHelpers = {
+  ensureTestRoot() {
+    let testRoot = document.getElementById("test-root");
+    if (!testRoot) {
+      testRoot = document.createElement("div");
+      testRoot.id = "test-root";
+      document.body.appendChild(testRoot);
+    }
+    return testRoot;
+  },
+
   mountAppContainer() {
-    const testRoot = document.getElementById("test-root");
+    const testRoot = this.ensureTestRoot();
     testRoot.innerHTML = '<div id="app"></div>';
   },
 
   clearTestRoot() {
-    const testRoot = document.getElementById("test-root");
+    const testRoot = this.ensureTestRoot();
     testRoot.innerHTML = "";
   },
 

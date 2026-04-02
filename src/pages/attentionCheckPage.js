@@ -73,4 +73,19 @@ window.renderAttentionCheckPage = function renderAttentionCheckPage(app) {
     event.preventDefault();
     app.handleAttentionCheckSubmit();
   });
+
+  document.querySelectorAll('input[name="q1"], input[name="q2"]').forEach(function (radio) {
+    radio.addEventListener("change", function (event) {
+      const attentionPage = state.sessionData.pages.attentionCheck;
+      attentionPage.responses = attentionPage.responses || {};
+      attentionPage.responses[event.target.name] = event.target.value;
+
+      if (attentionPage.responses.q1 && attentionPage.responses.q2) {
+        attentionPage.statusMessage = "";
+        attentionPage.statusType = "info";
+      }
+
+      storage.setSessionData(state.sessionData);
+    });
+  });
 };

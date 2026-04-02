@@ -27,7 +27,7 @@ window.renderTaskReminderPage = function renderTaskReminderPage(app) {
       </p>
 
       <p class="task-summary">
-        Do not make the statement obviously unrealistic, absurd, or clearly false just to change the AI prediction.
+        Do not make the statement obviously unrealistic, absurd, or clearly false just to change the AI prediction. For example, avoid:
       </p>
 
       <ul class="consent-list">

@@ -94,7 +94,7 @@ window.renderFeedbackPage = function renderFeedbackPage(app) {
       We are keen to hear your feedback about this study. Your feedback is valuable and helps us improve the experiment.
     </p>
 
-    <p class="note">Move both sliders and select an answer for each question to confirm your responses.</p>
+    <p class="note">Move both sliders and answer every question to confirm your responses.</p>
 
     ${statusMarkup}
 

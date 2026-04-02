@@ -120,6 +120,18 @@ Expected local endpoints:
 
 ## 3) Run tests
 
+**Automated test runner (headless):**
+
+```bash
+# Single run
+npm test
+
+# Watch mode (re-runs on file changes)
+npm run test:watch
+```
+
+**Browser-based test runner (legacy):**
+
 Open in browser:
 
 ```text

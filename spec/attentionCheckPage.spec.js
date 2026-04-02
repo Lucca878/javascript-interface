@@ -25,6 +25,15 @@ describe("attention check page", function () {
     expect(storage.getCurrentScreen()).toBe("attentionCheck");
   });
 
+  it("keeps already selected answers after rerender", function () {
+    const q1 = document.querySelector('input[name="q1"][value="C"]');
+    q1.checked = true;
+    q1.dispatchEvent(new Event("change", { bubbles: true }));
+    document.getElementById("attentionCheckNextButton").click();
+
+    expect(document.querySelector('input[name="q1"][value="C"]').checked).toBe(true);
+  });
+
   it("records answers and proceeds to the reminder page when both are selected", function () {
     spyOn(window, "recordAttentionCheck").and.callThrough();
     spyOn(app, "showTaskReminderPage");
