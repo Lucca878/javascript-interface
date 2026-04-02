@@ -1,21 +1,4 @@
 window.app = {
-  _backPressCount: 0,
-  _lastBackPressScreen: null,
-  _historyIndex: 0,
-
-  // Map each screen to its depth in the study flow
-  pageDepth: {
-    welcome: 1,
-    consent: 2,
-    instructions: 3,
-    attentionCheck: 4,
-    taskReminder: 5,
-    task: 6,
-    feedback: 7,
-    end: 8,
-    "no-consent": 2
-  },
-
   getProlificIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
     return params.get("PROLIFIC_PID");
@@ -67,20 +50,11 @@ window.app = {
   },
 
   pushHistoryState(screenName) {
-    this._historyIndex += 1;
-    window.history.pushState(
-      { screen: screenName, historyIndex: this._historyIndex },
-      "",
-      window.location.href
-    );
+    window.history.pushState({ screen: screenName }, "", window.location.href);
   },
 
   replaceHistoryState(screenName) {
-    window.history.replaceState(
-      { screen: screenName, historyIndex: this._historyIndex },
-      "",
-      window.location.href
-    );
+    window.history.replaceState({ screen: screenName }, "", window.location.href);
   },
 
   trackScreenTransition(nextScreen) {
@@ -112,70 +86,26 @@ window.app = {
     }
   },
 
-  handlePopState(event) {
+  handlePopState() {
     const currentScreen = storage.getCurrentScreen() || "welcome";
-    const nextHistoryIndex =
-      event && event.state && typeof event.state.historyIndex === "number"
-        ? event.state.historyIndex
-        : null;
-    const isBackNavigation =
-      nextHistoryIndex === null ? true : nextHistoryIndex < this._historyIndex;
-
-    if (nextHistoryIndex !== null) {
-      this._historyIndex = nextHistoryIndex;
-    }
-
-    // Forward navigation should never show the leave warning.
-    if (!isBackNavigation) {
-      this.replaceHistoryState(currentScreen);
-      this.restoreScreen();
-      return;
-    }
-
-    // Track consecutive back presses on the same screen
-    if (currentScreen === this._lastBackPressScreen) {
-      this._backPressCount++;
-    } else {
-      this._backPressCount = 1;
-      this._lastBackPressScreen = currentScreen;
-    }
-
-    // Get the page depth (how many pages deep in the study)
-    const depth = this.pageDepth[currentScreen] || 1;
-
-    // Show warning when back presses reach the page depth (about to exit)
-    if (currentScreen !== "end" && this._backPressCount >= depth) {
-      const confirmed = window.confirm(
-        "You are about to leave the study. Are you sure you want to exit?"
-      );
-
-      if (!confirmed) {
-        window.history.forward();
-        this._backPressCount--; // Undo the back press
-        return;
-      }
-
-      // Allow exit - reset counter
-      this._backPressCount = 0;
-      this._lastBackPressScreen = null;
-    }
-
     this.replaceHistoryState(currentScreen);
     this.restoreScreen();
   },
 
   setupHistoryGuard() {
-    if (
-      window.history.state &&
-      typeof window.history.state.historyIndex === "number"
-    ) {
-      this._historyIndex = window.history.state.historyIndex;
-    }
-
     this.replaceHistoryState(storage.getCurrentScreen() || "welcome");
 
-    window.addEventListener("popstate", (event) => {
-      this.handlePopState(event);
+    window.addEventListener("popstate", () => {
+      this.handlePopState();
+    });
+
+    // Browser-native leave warning for reload/close/navigation away.
+    window.addEventListener("beforeunload", (event) => {
+      const currentScreen = storage.getCurrentScreen();
+      if (currentScreen && currentScreen !== "end") {
+        event.preventDefault();
+        event.returnValue = "";
+      }
     });
   },
 

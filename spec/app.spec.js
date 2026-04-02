@@ -7,10 +7,6 @@ describe("app core", function () {
   afterEach(function () {
     testHelpers.clearTestRoot();
     delete window.APP_CONFIG;
-    // Reset back press tracking for tests
-    app._backPressCount = 0;
-    app._lastBackPressScreen = null;
-    app._historyIndex = 0;
   });
 
   it("generates a fallback participant ID when none exists", function () {
@@ -262,87 +258,6 @@ describe("app core", function () {
     expect(app.restoreScreen).toHaveBeenCalled();
   });
 
-  it("shows warning on first back press from welcome page (depth 1)", function () {
-    storage.setCurrentScreen("welcome");
-    spyOn(window, "confirm").and.returnValue(true);
-    spyOn(window.history, "forward");
-    spyOn(app, "restoreScreen");
-
-    app.handlePopState();
-
-    expect(window.confirm).toHaveBeenCalledWith("You are about to leave the study. Are you sure you want to exit?");
-    expect(window.history.forward).not.toHaveBeenCalled();
-    expect(app.restoreScreen).toHaveBeenCalled();
-  });
-
-  it("shows warning on second back press from consent page (depth 2)", function () {
-    storage.setCurrentScreen("consent");
-    spyOn(window, "confirm").and.returnValue(true);
-    spyOn(window.history, "forward");
-    spyOn(app, "restoreScreen");
-
-    // First back press - no warning yet
-    app.handlePopState();
-    expect(window.confirm).not.toHaveBeenCalled();
-    expect(app.restoreScreen).toHaveBeenCalled();
-
-    // Second back press - warning shows
-    app.handlePopState();
-    expect(window.confirm).toHaveBeenCalledWith("You are about to leave the study. Are you sure you want to exit?");
-  });
-
-  it("shows warning on third back press from task page (depth 6)", function () {
-    storage.setCurrentScreen("task");
-    spyOn(window, "confirm").and.returnValue(true);
-    spyOn(app, "restoreScreen");
-
-    // Presses 1-5: no warning
-    for (let i = 1; i < 6; i++) {
-      app.handlePopState();
-    }
-    expect(window.confirm).not.toHaveBeenCalled();
-
-    // Press 6: warning shows
-    app.handlePopState();
-    expect(window.confirm).toHaveBeenCalledWith("You are about to leave the study. Are you sure you want to exit?");
-  });
-
-  it("prevents leaving when user cancels the back warning", function () {
-    storage.setCurrentScreen("welcome");
-    spyOn(window, "confirm").and.returnValue(false);
-    spyOn(window.history, "forward");
-    spyOn(app, "restoreScreen");
-
-    app.handlePopState();
-
-    expect(window.confirm).toHaveBeenCalled();
-    expect(window.history.forward).toHaveBeenCalled();
-    expect(app.restoreScreen).not.toHaveBeenCalled();
-  });
-
-  it("does not show warning on back press from end page", function () {
-    storage.setCurrentScreen("end");
-    spyOn(window, "confirm");
-    spyOn(app, "restoreScreen");
-
-    app.handlePopState();
-
-    expect(window.confirm).not.toHaveBeenCalled();
-    expect(app.restoreScreen).toHaveBeenCalled();
-  });
-
-  it("does not show warning when popstate represents forward navigation", function () {
-    storage.setCurrentScreen("consent");
-    app._historyIndex = 2;
-    spyOn(window, "confirm");
-    spyOn(app, "restoreScreen");
-
-    app.handlePopState({ state: { historyIndex: 3 } });
-
-    expect(window.confirm).not.toHaveBeenCalled();
-    expect(app.restoreScreen).toHaveBeenCalled();
-  });
-
   it("registers a popstate listener when setting up the history guard", function () {
     spyOn(window, "addEventListener");
     spyOn(app, "replaceHistoryState");
@@ -351,6 +266,7 @@ describe("app core", function () {
 
     expect(app.replaceHistoryState).toHaveBeenCalled();
     expect(window.addEventListener).toHaveBeenCalledWith("popstate", jasmine.any(Function));
+    expect(window.addEventListener).toHaveBeenCalledWith("beforeunload", jasmine.any(Function));
   });
 
   it("shows a loading state on task page while PHP corpus is still loading", function () {
