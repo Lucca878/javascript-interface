@@ -1,5 +1,6 @@
 window.app = {
   _shownBackNavigationWarningScreens: new Set(),
+  _hasShownWelcomeLeaveWarning: false,
 
   getProlificIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -116,6 +117,16 @@ window.app = {
 
     window.addEventListener("popstate", () => {
       this.handlePopState();
+    });
+
+    // Fallback for browsers where initial welcome back press may bypass popstate.
+    window.addEventListener("beforeunload", (event) => {
+      const activeScreen = storage.getCurrentScreen() || "welcome";
+      if (activeScreen === "welcome" && !this._hasShownWelcomeLeaveWarning) {
+        this._hasShownWelcomeLeaveWarning = true;
+        event.preventDefault();
+        event.returnValue = "";
+      }
     });
   },
 
