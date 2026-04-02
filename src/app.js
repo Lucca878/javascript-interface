@@ -1,4 +1,20 @@
 window.app = {
+  _backPressCount: 0,
+  _lastBackPressScreen: null,
+
+  // Map each screen to its depth in the study flow
+  pageDepth: {
+    welcome: 1,
+    consent: 2,
+    instructions: 3,
+    attentionCheck: 4,
+    taskReminder: 5,
+    task: 6,
+    feedback: 7,
+    end: 8,
+    "no-consent": 2
+  },
+
   getProlificIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
     return params.get("PROLIFIC_PID");
@@ -88,6 +104,35 @@ window.app = {
 
   handlePopState() {
     const currentScreen = storage.getCurrentScreen() || "welcome";
+
+    // Track consecutive back presses on the same screen
+    if (currentScreen === this._lastBackPressScreen) {
+      this._backPressCount++;
+    } else {
+      this._backPressCount = 1;
+      this._lastBackPressScreen = currentScreen;
+    }
+
+    // Get the page depth (how many pages deep in the study)
+    const depth = this.pageDepth[currentScreen] || 1;
+
+    // Show warning when back presses reach the page depth (about to exit)
+    if (currentScreen !== "end" && this._backPressCount >= depth) {
+      const confirmed = window.confirm(
+        "You are about to leave the study. Are you sure you want to exit?"
+      );
+
+      if (!confirmed) {
+        window.history.forward();
+        this._backPressCount--; // Undo the back press
+        return;
+      }
+
+      // Allow exit - reset counter
+      this._backPressCount = 0;
+      this._lastBackPressScreen = null;
+    }
+
     this.replaceHistoryState(currentScreen);
     this.restoreScreen();
   },

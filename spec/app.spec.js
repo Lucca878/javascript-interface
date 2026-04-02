@@ -7,6 +7,9 @@ describe("app core", function () {
   afterEach(function () {
     testHelpers.clearTestRoot();
     delete window.APP_CONFIG;
+    // Reset back press tracking for tests
+    app._backPressCount = 0;
+    app._lastBackPressScreen = null;
   });
 
   it("generates a fallback participant ID when none exists", function () {
@@ -255,6 +258,75 @@ describe("app core", function () {
     app.handlePopState();
 
     expect(app.replaceHistoryState).toHaveBeenCalledWith("instructions");
+    expect(app.restoreScreen).toHaveBeenCalled();
+  });
+
+  it("shows warning on first back press from welcome page (depth 1)", function () {
+    storage.setCurrentScreen("welcome");
+    spyOn(window, "confirm").and.returnValue(true);
+    spyOn(window.history, "forward");
+    spyOn(app, "restoreScreen");
+
+    app.handlePopState();
+
+    expect(window.confirm).toHaveBeenCalledWith("You are about to leave the study. Are you sure you want to exit?");
+    expect(window.history.forward).not.toHaveBeenCalled();
+    expect(app.restoreScreen).toHaveBeenCalled();
+  });
+
+  it("shows warning on second back press from consent page (depth 2)", function () {
+    storage.setCurrentScreen("consent");
+    spyOn(window, "confirm").and.returnValue(true);
+    spyOn(window.history, "forward");
+    spyOn(app, "restoreScreen");
+
+    // First back press - no warning yet
+    app.handlePopState();
+    expect(window.confirm).not.toHaveBeenCalled();
+    expect(app.restoreScreen).toHaveBeenCalled();
+
+    // Second back press - warning shows
+    app.handlePopState();
+    expect(window.confirm).toHaveBeenCalledWith("You are about to leave the study. Are you sure you want to exit?");
+  });
+
+  it("shows warning on third back press from task page (depth 6)", function () {
+    storage.setCurrentScreen("task");
+    spyOn(window, "confirm").and.returnValue(true);
+    spyOn(app, "restoreScreen");
+
+    // Presses 1-5: no warning
+    for (let i = 1; i < 6; i++) {
+      app.handlePopState();
+    }
+    expect(window.confirm).not.toHaveBeenCalled();
+
+    // Press 6: warning shows
+    app.handlePopState();
+    expect(window.confirm).toHaveBeenCalledWith("You are about to leave the study. Are you sure you want to exit?");
+  });
+
+  it("prevents leaving when user cancels the back warning", function () {
+    storage.setCurrentScreen("welcome");
+    spyOn(window, "confirm").and.returnValue(false);
+    spyOn(window.history, "forward");
+    spyOn(app, "restoreScreen");
+
+    app.handlePopState();
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(window.history.forward).toHaveBeenCalled();
+    expect(app.restoreScreen).not.toHaveBeenCalled();
+  });
+
+  it("does not show warning on back press from end page", function () {
+    storage.setCurrentScreen("end");
+    spyOn(window, "confirm");
+    spyOn(app, "restoreScreen");
+
+    app.handlePopState();
+
+    expect(window.confirm).not.toHaveBeenCalled();
     expect(app.restoreScreen).toHaveBeenCalled();
   });
 
