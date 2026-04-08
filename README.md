@@ -48,7 +48,7 @@ Participants go through these screens:
 1. Welcome
 2. Consent
 3. Instructions
-4. Attention Check (2 multiple-choice questions)
+4. Attention Check (3 multiple-choice questions)
 5. Main Task Reminder
 6. Task (up to 10 rewrite attempts)
 7. Feedback
@@ -123,6 +123,9 @@ Expected local endpoints:
 **Automated test runner (headless):**
 
 ```bash
+# One-time setup
+npm install
+
 # Single run
 npm test
 
@@ -151,6 +154,15 @@ This is a static SPA served by Nginx, with PHP endpoints for data.
 
 On local `localhost`/`127.0.0.1`, config defaults to local PHP/API endpoints.
 On production host, config uses relative PHP endpoints and configured model backend.
+
+### State Persistence and Navigation Guardrails
+
+- Attention-check answers (`q1`, `q2`) are persisted on change, so revisits/re-renders in the same browser session restore selected options.
+- Task-page rewrite drafts are persisted on input, so unsent text is restored after re-render/reload in the same browser session.
+- Browser back navigation is handled via `popstate` and re-renders the current app screen.
+- A one-time warning is shown on the first trapped back-navigation attempt per screen:
+  - `Back navigation is disabled in this study. Repeated attempts may cause you to leave the study. Please use the on-screen buttons.`
+- If browser storage is cleared, preselected answers/drafts are no longer restored.
 
 ## Frontend Deployment (Hetzner)
 
@@ -400,6 +412,18 @@ sudo -u postgres psql -d study -c "SELECT csv_row_json FROM results WHERE sessio
 
 # One specific CSV field (e.g. total duration)
 sudo -u postgres psql -d study -c "SELECT csv_row_json->>'total_duration_ms' FROM results WHERE session_id = '<session_id>';"
+
+# Attention-check summary field (current schema)
+sudo -u postgres psql -d study -c "SELECT csv_row_json->>'attention_check_num_correct' FROM results WHERE session_id = '<session_id>';"
+
+# Page-level timing fields from csv_row_json
+sudo -u postgres psql -d study -c "SELECT csv_row_json->>'total_duration_ms', csv_row_json->>'welcome_duration_ms', csv_row_json->>'consent_duration_ms', csv_row_json->>'instructions_duration_ms', csv_row_json->>'attention_check_duration_ms', csv_row_json->>'task_reminder_duration_ms', csv_row_json->>'feedback_duration_ms' FROM results WHERE session_id = '<session_id>';"
+
+# Rewrite-attempt timing fields (per attempt)
+sudo -u postgres psql -d study -c "SELECT csv_row_json->>'rewrite1_duration_ms', csv_row_json->>'rewrite2_duration_ms', csv_row_json->>'rewrite3_duration_ms', csv_row_json->>'rewrite4_duration_ms', csv_row_json->>'rewrite5_duration_ms', csv_row_json->>'rewrite6_duration_ms', csv_row_json->>'rewrite7_duration_ms', csv_row_json->>'rewrite8_duration_ms', csv_row_json->>'rewrite9_duration_ms', csv_row_json->>'rewrite10_duration_ms' FROM results WHERE session_id = '<session_id>';"
+
+# Timing fields are stored as text in JSON; cast to bigint for numeric analysis.
+sudo -u postgres psql -d study -c "SELECT session_id, (csv_row_json->>'total_duration_ms')::bigint AS total_duration_ms FROM results WHERE csv_row_json->>'total_duration_ms' <> '' ORDER BY total_duration_ms DESC LIMIT 20;"
 ```
 
 ## 3) Export data to local machine
@@ -413,12 +437,16 @@ ssh root@157.90.127.76 "sudo -u postgres psql -d study -f /var/www/study/api/sql
 # Preferred short CSV export (uses results_csv view with header row)
 ssh root@157.90.127.76 "sudo -u postgres psql -d study -c \"\\copy (SELECT * FROM results_csv ORDER BY received_at) TO STDOUT WITH CSV HEADER\"" > ~/Desktop/all_sessions.csv
 
+# Timing-focused CSV export (durations only)
+ssh root@157.90.127.76 "sudo -u postgres psql -d study -c \"\\copy (SELECT session_id, prolific_id, total_duration_ms, welcome_duration_ms, consent_duration_ms, instructions_duration_ms, attention_check_duration_ms, task_reminder_duration_ms, feedback_duration_ms, rewrite1_duration_ms, rewrite2_duration_ms, rewrite3_duration_ms, rewrite4_duration_ms, rewrite5_duration_ms, rewrite6_duration_ms, rewrite7_duration_ms, rewrite8_duration_ms, rewrite9_duration_ms, rewrite10_duration_ms, received_at FROM results_csv ORDER BY received_at) TO STDOUT WITH CSV HEADER\"" > ~/Desktop/all_sessions_timing.csv
+
 # Full JSON export (one payload per line)
 ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -c \"SELECT payload_json::text FROM results ORDER BY received_at;\"" > ~/Desktop/all_sessions.ndjson
 
 # Legacy explicit-column CSV export (kept for compatibility)
-# Export all sessions as CSV to Desktop
-ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -F',' -c \"SELECT csv_row_json->>'session_id',csv_row_json->>'prolific_id',csv_row_json->>'session_start',csv_row_json->>'session_end',csv_row_json->>'total_duration_ms',csv_row_json->>'consent_decision',csv_row_json->>'statement_id',csv_row_json->>'original_text',csv_row_json->>'original_label',csv_row_json->>'original_confidence',csv_row_json->>'attempts_used',csv_row_json->>'max_attempts',csv_row_json->>'rewrite1_text',csv_row_json->>'rewrite1_label',csv_row_json->>'rewrite1_confidence',csv_row_json->>'rewrite1_duration_ms',csv_row_json->>'rewrite2_text',csv_row_json->>'rewrite2_label',csv_row_json->>'rewrite2_confidence',csv_row_json->>'rewrite2_duration_ms',csv_row_json->>'rewrite3_text',csv_row_json->>'rewrite3_label',csv_row_json->>'rewrite3_confidence',csv_row_json->>'rewrite3_duration_ms',csv_row_json->>'rewrite4_text',csv_row_json->>'rewrite4_label',csv_row_json->>'rewrite4_confidence',csv_row_json->>'rewrite4_duration_ms',csv_row_json->>'rewrite5_text',csv_row_json->>'rewrite5_label',csv_row_json->>'rewrite5_confidence',csv_row_json->>'rewrite5_duration_ms',csv_row_json->>'rewrite6_text',csv_row_json->>'rewrite6_label',csv_row_json->>'rewrite6_confidence',csv_row_json->>'rewrite6_duration_ms',csv_row_json->>'rewrite7_text',csv_row_json->>'rewrite7_label',csv_row_json->>'rewrite7_confidence',csv_row_json->>'rewrite7_duration_ms',csv_row_json->>'rewrite8_text',csv_row_json->>'rewrite8_label',csv_row_json->>'rewrite8_confidence',csv_row_json->>'rewrite8_duration_ms',csv_row_json->>'rewrite9_text',csv_row_json->>'rewrite9_label',csv_row_json->>'rewrite9_confidence',csv_row_json->>'rewrite9_duration_ms',csv_row_json->>'rewrite10_text',csv_row_json->>'rewrite10_label',csv_row_json->>'rewrite10_confidence',csv_row_json->>'rewrite10_duration_ms',csv_row_json->>'difficulty',csv_row_json->>'motivation',csv_row_json->>'strategies',csv_row_json->>'feedback_text',csv_row_json->>'received_at' FROM results ORDER BY received_at;\"" > ~/Desktop/all_sessions.csv
+# For full-column export, prefer the `results_csv` view above.
+# This explicit example keeps only common analysis columns and follows current field naming/order.
+ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -F',' -c \"SELECT csv_row_json->>'session_id', csv_row_json->>'prolific_id', csv_row_json->>'session_start', csv_row_json->>'session_end', csv_row_json->>'total_duration_ms', csv_row_json->>'consent_decision', csv_row_json->>'statement_id', csv_row_json->>'attempts_used', csv_row_json->>'max_attempts', csv_row_json->>'motivation', csv_row_json->>'difficulty', csv_row_json->>'strategies', csv_row_json->>'feedback_text', csv_row_json->>'attention_check_num_correct', csv_row_json->>'attention_check_all_correct', csv_row_json->>'received_at' FROM results ORDER BY received_at;\"" > ~/Desktop/all_sessions.csv
 
 # Export one participant's sessions as CSV
 ssh root@157.90.127.76 "sudo -u postgres psql -d study -At -F',' -c \"SELECT csv_row_json->>'session_id', csv_row_json->>'prolific_id', csv_row_json->>'received_at' FROM results WHERE prolific_id = '<prolific_id>' ORDER BY received_at;\"" > ~/Desktop/participant_sessions.csv
@@ -470,8 +498,8 @@ SELECT * FROM results LIMIT 5;
 # Dump full database to file on server
 sudo -u postgres pg_dump study > /var/backups/study-$(date +%F-%H%M).sql
 
-# Download dump to local machine (run from local terminal)
-scp root@157.90.127.76:/var/backups/study-$(date +%F).sql ~/Desktop/study-backup.sql
+# Download latest dump to local machine (run from local terminal)
+scp root@157.90.127.76:"$(ssh root@157.90.127.76 'ls -1t /var/backups/study-*.sql | head -n1')" ~/Desktop/study-backup.sql
 ```
 
 ## 7) Restore from backup
