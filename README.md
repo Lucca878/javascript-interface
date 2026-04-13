@@ -48,10 +48,10 @@ Participants go through these screens:
 1. Welcome
 2. Consent
 3. Instructions
-4. Attention Check (3 multiple-choice questions)
+4. Attention Check (2 multiple-choice questions)
 5. Main Task Reminder
 6. Task (up to 10 rewrite attempts)
-7. Feedback
+7. Feedback 
 8. End
 
 The app records session timing and interaction data and submits it through `api/participantData.php`.
