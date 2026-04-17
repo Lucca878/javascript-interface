@@ -290,6 +290,53 @@ describe("app core", function () {
     expect(window.addEventListener).toHaveBeenCalledWith("popstate", jasmine.any(Function));
   });
 
+  it("registers a visibilitychange listener when setting up the visibility guard", function () {
+    spyOn(document, "addEventListener");
+
+    app.setupVisibilityGuard();
+
+    expect(document.addEventListener).toHaveBeenCalledWith("visibilitychange", jasmine.any(Function));
+  });
+
+  it("shows a tab-switch warning on active study screens when the tab is hidden", function () {
+    spyOn(window, "alert");
+    storage.setCurrentScreen("task");
+
+    spyOnProperty(document, "visibilityState", "get").and.returnValue("hidden");
+    app.handleVisibilityChange();
+
+    expect(window.alert).toHaveBeenCalledWith(
+      "You are about to switch tabs or minimize the window. Please do not use AI tools or external resources to complete the task."
+    );
+  });
+
+  it("does not show a tab-switch warning on terminal screens (welcome, end)", function () {
+    spyOn(window, "alert");
+
+    spyOnProperty(document, "visibilityState", "get").and.returnValue("hidden");
+
+    storage.setCurrentScreen("welcome");
+    app.handleVisibilityChange();
+    storage.setCurrentScreen("end");
+    app.handleVisibilityChange();
+    storage.setCurrentScreen("consent");
+    app.handleVisibilityChange();
+    storage.setCurrentScreen("no-consent");
+    app.handleVisibilityChange();
+
+    expect(window.alert).not.toHaveBeenCalled();
+  });
+
+  it("does not show a tab-switch warning when the tab becomes visible again", function () {
+    spyOn(window, "alert");
+    storage.setCurrentScreen("task");
+
+    spyOnProperty(document, "visibilityState", "get").and.returnValue("visible");
+    app.handleVisibilityChange();
+
+    expect(window.alert).not.toHaveBeenCalled();
+  });
+
   it("shows a loading state on task page while PHP corpus is still loading", function () {
     window.APP_CONFIG = { corpusPhpEndpoint: "api/statements.php" };
     corpusService.loadPromise = new Promise(function () {});

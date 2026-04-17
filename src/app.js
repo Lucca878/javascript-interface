@@ -113,6 +113,25 @@ window.app = {
     });
   },
 
+  handleVisibilityChange() {
+    if (document.visibilityState === "hidden") {
+      const currentScreen = storage.getCurrentScreen();
+      // Only warn during active study screens, not on terminal pages.
+      const screensToWarn = ["instructions", "attentionCheck", "taskReminder", "task", "feedback"];
+      if (screensToWarn.includes(currentScreen)) {
+        window.alert(
+          "You are about to switch tabs or minimize the window. Please do not use AI tools or external resources to complete the task."
+        );
+      }
+    }
+  },
+
+  setupVisibilityGuard() {
+    document.addEventListener("visibilitychange", () => {
+      this.handleVisibilityChange();
+    });
+  },
+
   showWelcomePage() {
     this.trackScreenTransition("welcome");
     storage.setCurrentScreen("welcome");
@@ -794,5 +813,6 @@ window.app = {
     this.initializeSessionData();
     this.restoreScreen();
     this.setupHistoryGuard();
+    this.setupVisibilityGuard();
   }
 };
