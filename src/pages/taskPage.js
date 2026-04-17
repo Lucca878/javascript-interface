@@ -64,6 +64,17 @@ window.renderTaskPage = function renderTaskPage(app) {
   const continueButtonMarkup = taskSession.isComplete
     ? '<button class="button" id="taskContinueButton">Continue to Feedback</button>'
     : "";
+  const hasDraftText = typeof taskSession.draftText === "string" && taskSession.draftText.length > 0;
+  const shouldPrefillPreviousAttempt = !taskSession.isComplete
+    && taskSession.attemptsUsed > 0
+    && !hasDraftText
+    && Boolean(taskSession.lastRewrite);
+  const rewriteInputValue = shouldPrefillPreviousAttempt
+    ? taskSession.lastRewrite
+    : (taskSession.draftText || "");
+  const prefillNoteMarkup = shouldPrefillPreviousAttempt
+    ? '<p class="task-prefill-note">Your previous modification has been prefilled. Edit it before submitting this attempt.</p>'
+    : "";
   const rewriteControlsMarkup = taskSession.isComplete
     ? ""
     : `
@@ -72,8 +83,9 @@ window.renderTaskPage = function renderTaskPage(app) {
       id="taskRewriteInput"
       class="task-textarea"
       rows="8"
-      placeholder="${utils.escapeHtml(taskSession.lastRewrite || taskSession.originalText)}"
-    >${utils.escapeHtml(taskSession.draftText || "")}</textarea>
+    >${utils.escapeHtml(rewriteInputValue)}</textarea>
+
+    ${prefillNoteMarkup}
 
     <div class="task-meta">
       <span>Attempts remaining: ${taskSession.maxAttempts - taskSession.attemptsUsed}</span>

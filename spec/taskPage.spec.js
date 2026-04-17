@@ -160,23 +160,21 @@ describe("task page", function () {
     expect(storage.getTaskSession().draftText).toBe(draft);
   });
 
-  it("clears the textarea after a successful submission", async function () {
+  it("prefills the textarea with the previous submission for the next attempt", async function () {
     spyOn(modelService, "getPrediction").and.returnValue({ label: 1, labelStr: "truthful", confidence: 80.0 });
-    document.getElementById("taskRewriteInput").value = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+    const firstRewrite = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+    document.getElementById("taskRewriteInput").value = firstRewrite;
 
     await app.handleTaskSubmit();
 
-    expect(document.getElementById("taskRewriteInput").value).toBe("");
+    expect(document.getElementById("taskRewriteInput").value).toBe(firstRewrite);
+    expect(document.getElementById("app").textContent).toContain("previous modification has been prefilled");
   });
 
-  it("uses the previous successful rewrite as textarea placeholder", async function () {
-    spyOn(modelService, "getPrediction").and.returnValue({ label: 1, labelStr: "truthful", confidence: 80.0 });
-    const rewriteText = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
-    document.getElementById("taskRewriteInput").value = rewriteText;
-
-    await app.handleTaskSubmit();
-
-    expect(document.getElementById("taskRewriteInput").getAttribute("placeholder")).toBe(rewriteText);
+  it("starts attempt one with an empty textarea and no prefill note", function () {
+    expect(state.taskSession.attemptsUsed).toBe(0);
+    expect(document.getElementById("taskRewriteInput").value).toBe("");
+    expect(document.querySelector(".task-prefill-note")).toBeNull();
   });
 
   it("does not consume an attempt when model prediction fails", async function () {
