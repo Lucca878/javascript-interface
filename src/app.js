@@ -120,7 +120,7 @@ window.app = {
       const screensToWarn = ["instructions", "attentionCheck", "taskReminder", "task", "feedback"];
       if (screensToWarn.includes(currentScreen)) {
         window.alert(
-          "You are about to switch tabs or minimize the window. Please do not use AI tools or external resources to complete the task."
+          "You switched away from the study tab. Please do not use AI tools or external resources to complete the task."
         );
       }
     }

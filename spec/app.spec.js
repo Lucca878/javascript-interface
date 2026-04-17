@@ -306,7 +306,7 @@ describe("app core", function () {
     app.handleVisibilityChange();
 
     expect(window.alert).toHaveBeenCalledWith(
-      "You are about to switch tabs or minimize the window. Please do not use AI tools or external resources to complete the task."
+      "You switched away from the study tab. Please do not use AI tools or external resources to complete the task."
     );
   });
 
