@@ -17,7 +17,6 @@ window.renderTaskReminderPage = function renderTaskReminderPage(app) {
           <li>
             <strong>Try to flip the model prediction:</strong> Rewrite the statement to reduce the AI's confidence so much that it changes its initial prediction.
           </li>
-            <strong>Keep the same core meaning:</strong> Changes are allowed, but the same key facts and events must remain recognizable in your modification.
             <strong>Keep the same core meaning:</strong> Key facts and events must remain recognizable in your modification.
           </li>
           <li>

@@ -13,7 +13,7 @@ window.renderAttentionCheckPage = function renderAttentionCheckPage(app) {
 
   appRoot.innerHTML = `
     <p class="lead">
-      Please answer these two questions based on the instructions you just read.
+      <strong>Please answer these two questions based on the instructions you just read.</strong>
     </p>
 
     ${messageMarkup}
