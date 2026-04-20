@@ -33,7 +33,7 @@ window.renderInstructionsPage = function renderInstructionsPage(app) {
 
     <div class="info-box">
       <p class="lead instructions-emphasis">
-        There is one very important condition to be met: You must maintain the meaning of the original statement. In other words, in your modification, core facts, events or the overall claim of the original statement should remain recognizable. Your modification should also be grammatically correct and appear natural.
+        <strong>There is one very important condition to be met:</strong> You must maintain the meaning of the original statement. In other words, in your modification, core facts, events or the overall claim of the original statement should remain recognizable. Your modification should also be grammatically correct and appear natural.
       </p>
 
       <p class="lead instructions-emphasis">
