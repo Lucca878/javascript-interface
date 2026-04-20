@@ -32,10 +32,10 @@ window.renderTaskReminderPage = function renderTaskReminderPage(app) {
             <strong>No outside tools:</strong> Please do not use Google, ChatGPT, or any other external resources.
           </li>
           <li>
-            <strong>No unrealistic edits:</strong> Do not make the statement absurd or clearly false just to change the prediction.
+            <strong>No unrealistic edits:</strong> Do not make the statement absurd or clearly false just to change the prediction. For example:
             <ul class="task-reminder-list task-reminder-example-list">
-              <li>Example: changing "my grandmother died at age 76" to "my grandmother died at age 765"</li>
-              <li>Example: adding unrealistic details such as "aliens abducted me on the way home"</li>
+              <li>Changing "my grandmother died at age 76" to "my grandmother died at age 765"</li>
+              <li>Adding unrealistic details such as "aliens abducted me on the way home"</li>
             </ul>
           </li>
         </ul>
