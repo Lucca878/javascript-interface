@@ -13,7 +13,10 @@ describe("task reminder page", function () {
     const text = document.getElementById("app").textContent;
 
     expect(text).toContain("You are now about to start the main task.");
-    expect(text).toContain("Please do not use any outside tools");
+    expect(text).toContain("What To Do");
+    expect(text).toContain("What Not To Do");
+    expect(text).toContain("No outside tools:");
+    expect(text).toContain("same key facts and events");
     expect(document.getElementById("taskReminderNextButton")).not.toBeNull();
   });
 

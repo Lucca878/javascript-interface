@@ -9,7 +9,7 @@ window.renderInstructionsPage = function renderInstructionsPage(app) {
     <p class="lead">
       In this study, you will read <strong>1</strong> short statement written by
       participants in another study. This statement is either <strong>truthful</strong>
-      or <strong>deceptive</strong>. Some statements have been shortened.
+      or <strong>deceptive</strong>. Truthful statements describe events that have actually happened, while deceptive statements are fabricated. Some statements have been shortened.
     </p>
 
     <p class="lead">
@@ -33,7 +33,7 @@ window.renderInstructionsPage = function renderInstructionsPage(app) {
 
     <div class="info-box">
       <p class="lead instructions-emphasis">
-        There is one very important condition to be met: You must maintain the meaning of the original statement, be grammatically correct, and appear natural.
+        There is one very important condition to be met: You must maintain the meaning of the original statement. In other words, in your modification, core facts, events or the overall claim of the original statement should remain recognizable. Your modification should also be grammatically correct and appear natural.
       </p>
 
       <p class="lead instructions-emphasis">
