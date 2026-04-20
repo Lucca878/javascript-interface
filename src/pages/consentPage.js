@@ -6,8 +6,7 @@ window.renderConsentPage = function renderConsentPage(app) {
     <h1 class="title">Information and Consent</h1>
 
     <p class="lead">
-      This study is conducted by researchers at Tilburg University and the
-      University of Amsterdam (The Netherlands).
+      This study is conducted by researchers at Tilburg University (The Netherlands).
     </p>
 
     <p class="lead">

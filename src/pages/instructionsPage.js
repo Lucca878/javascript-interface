@@ -9,7 +9,7 @@ window.renderInstructionsPage = function renderInstructionsPage(app) {
     <p class="lead">
       In this study, you will read <strong>1</strong> short statement written by
       participants in another study. This statement is either <strong>truthful</strong>
-      or <strong>deceptive</strong>. Truthful statements describe events that have actually happened, while deceptive statements are fabricated. Some statements have been shortened.
+      or <strong>deceptive</strong>. Truthful statements describe events that have actually happened, while deceptive statements are made up. Some statements have been shortened.
     </p>
 
     <p class="lead">

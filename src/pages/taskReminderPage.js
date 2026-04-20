@@ -15,10 +15,10 @@ window.renderTaskReminderPage = function renderTaskReminderPage(app) {
         <h2 class="task-panel-title">What To Do</h2>
         <ul class="task-reminder-list">
           <li>
-            <strong>Try to flip the model prediction:</strong> Rewrite the statement to reduce the AI's confidence and, if possible, change its prediction.
+            <strong>Try to flip the model prediction:</strong> Rewrite the statement to reduce the AI's confidence so much that it changes its initial prediction.
           </li>
-          <li>
-            <strong>Keep the same core meaning:</strong> Changes are allowed, but your rewrite must maintain key facts and events.
+            <strong>Keep the same core meaning:</strong> Changes are allowed, but the same key facts and events must remain recognizable in your modification.
+            <strong>Keep the same core meaning:</strong> Key facts and events must remain recognizable in your modification.
           </li>
           <li>
             <strong>Write naturally:</strong> Your modified statement should be grammatically correct and sound natural.
@@ -34,13 +34,11 @@ window.renderTaskReminderPage = function renderTaskReminderPage(app) {
           </li>
           <li>
             <strong>No unrealistic edits:</strong> Do not make the statement absurd or clearly false just to change the prediction.
+            <ul class="task-reminder-list task-reminder-example-list">
+              <li>Example: changing "my grandmother died at age 76" to "my grandmother died at age 765"</li>
+              <li>Example: adding unrealistic details such as "aliens abducted me on the way home"</li>
+            </ul>
           </li>
-        </ul>
-
-        <p class="task-summary task-reminder-example-title"><strong>Avoid examples like:</strong></p>
-        <ul class="task-reminder-list task-reminder-example-list">
-          <li>Changing "my grandmother died at age 76" to "my grandmother died at age 765"</li>
-          <li>Adding unrealistic details such as "aliens abducted me on the way home"</li>
         </ul>
       </section>
     </div>

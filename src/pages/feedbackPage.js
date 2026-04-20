@@ -141,7 +141,7 @@ window.renderFeedbackPage = function renderFeedbackPage(app) {
     </div>
 
     <label class="task-label" for="strategiesInput">
-      <strong>4. Which strategies did you use to manipulate statements so the AI would be misled?</strong>
+      <strong>4. How did you modify the statement so the AI would change its initial prediction?</strong>
     </label>
 
     ${recapMarkup}
@@ -151,7 +151,7 @@ window.renderFeedbackPage = function renderFeedbackPage(app) {
       class="task-textarea"
       style="margin-top: 1rem;"
       rows="7"
-      placeholder="Describe your approach in as much detail as you can."
+      placeholder="Describe your approach."
     >${utils.escapeHtml(feedbackSession.strategies || "")}</textarea>
 
     <label class="task-label" for="feedbackInput">
