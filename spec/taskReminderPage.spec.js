@@ -16,7 +16,7 @@ describe("task reminder page", function () {
     expect(text).toContain("What To Do");
     expect(text).toContain("What Not To Do");
     expect(text).toContain("No outside tools:");
-    expect(text).toContain("same key facts and events");
+    expect(text).toContain("Key facts and events must remain recognizable");
     expect(document.getElementById("taskReminderNextButton")).not.toBeNull();
   });
 

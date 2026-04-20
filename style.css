@@ -251,6 +251,14 @@ body {
   margin-top: 0;
 }
 
+.task-reminder-example-list li {
+  margin-bottom: 6px;
+}
+
+.task-reminder-example-list li:last-child {
+  margin-bottom: 0;
+}
+
 .task-reminder-actions {
   margin-top: 24px;
 }
