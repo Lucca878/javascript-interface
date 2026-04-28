@@ -680,13 +680,17 @@ nginx -v
 
 ## 2) Ensure model files exist on server
 
-Expected backend model path (current production):
+Choose a model subdirectory under:
+
+```text
+/var/www/study/backend/models/
+```
+
+Examples:
 
 ```text
 /var/www/study/backend/models/modernbert_trained
 ```
-
-Alternative rollback path:
 
 ```text
 /var/www/study/backend/models/distilBERT_finetuned
@@ -701,7 +705,16 @@ Expected files:
 - `special_tokens_map.json`
 - `vocab.txt`
 
-If model folder is missing, copy from local machine using a temporary tar archive.
+If model folder is missing (expected, because `backend/models/` is gitignored), copy it from your local machine:
+
+```bash
+# run on local machine
+MODEL_SUBDIR=modernbert_trained   # example; change as needed
+
+rsync -avh --progress \
+  <LOCAL_REPO_PATH>/backend/models/${MODEL_SUBDIR}/ \
+  root@157.90.127.76:/var/www/study/backend/models/${MODEL_SUBDIR}/
+```
 
 ## 3) Build and run container
 
@@ -709,14 +722,17 @@ If model folder is missing, copy from local machine using a temporary tar archiv
 ssh root@157.90.127.76
 cd /var/www/study/backend
 
+MODEL_SUBDIR=modernbert_trained   # example; change as needed
+MODEL_VERSION_TAG=modernbert-v1   # example; change as needed
+
 docker build -t model-backend:hetzner .
 docker rm -f model-backend 2>/dev/null || true
 docker run -d \
   --name model-backend \
   --restart unless-stopped \
   -e PORT=8000 \
-  -e MODEL_DIR=models/modernbert_trained \
-  -e MODEL_VERSION=modernbert-v1 \
+  -e MODEL_DIR=models/${MODEL_SUBDIR} \
+  -e MODEL_VERSION=${MODEL_VERSION_TAG} \
   -e RAW_LABEL_FOR_TRUTHFUL=0 \
   -p 127.0.0.1:8000:8000 \
   model-backend:hetzner
@@ -826,9 +842,11 @@ docker restart model-backend
 
 # Rebuild backend image after backend code change
 cd /var/www/study/backend
+MODEL_SUBDIR=modernbert_trained   # example; change as needed
+MODEL_VERSION_TAG=modernbert-v1   # example; change as needed
 docker build -t model-backend:hetzner .
 docker rm -f model-backend
-docker run -d --name model-backend --restart unless-stopped -e PORT=8000 -e MODEL_DIR=models/modernbert_trained -e MODEL_VERSION=modernbert-v1 -e RAW_LABEL_FOR_TRUTHFUL=0 -p 127.0.0.1:8000:8000 model-backend:hetzner
+docker run -d --name model-backend --restart unless-stopped -e PORT=8000 -e MODEL_DIR=models/${MODEL_SUBDIR} -e MODEL_VERSION=${MODEL_VERSION_TAG} -e RAW_LABEL_FOR_TRUTHFUL=0 -p 127.0.0.1:8000:8000 model-backend:hetzner
 
 # Nginx checks
 nginx -t
@@ -841,7 +859,7 @@ systemctl reload nginx
   - Cert for `api.lpstudies.net` missing. Run `certbot --nginx -d api.lpstudies.net --redirect`.
 - Health says `real_inference_enabled: false`:
   - Model files missing or wrong path in container.
-  - Verify the path configured by `MODEL_DIR` (for current production: `/var/www/study/backend/models/modernbert_trained`) and rebuild image.
+  - Verify the path configured by `MODEL_DIR` exists under `/var/www/study/backend/models/`, then rebuild image.
 - Frontend still calls Cloud Run unexpectedly:
   - Check `index.html` for `activeModelBackend` value.
   - Ensure latest code is deployed on server (`git pull`).
