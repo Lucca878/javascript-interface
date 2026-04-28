@@ -14,16 +14,16 @@ LABEL_DECEPTIVE = 0
 LABEL_TRUTHFUL = 1
 
 # Configure this to reflect the raw checkpoint label mapping.
-# For your current DistilBERT checkpoint: raw 0 = truthful, raw 1 = deceptive.
+# For your current checkpoint: raw 0 = truthful, raw 1 = deceptive.
 RAW_LABEL_FOR_TRUTHFUL = int(os.getenv("RAW_LABEL_FOR_TRUTHFUL", "0"))
 MODEL_VERSION = os.getenv("MODEL_VERSION", "distilbert-v1")
-DISTILBERT_MODEL_DIR = os.getenv("DISTILBERT_MODEL_DIR", "models/distilBERT_finetuned")
+MODEL_DIR = os.getenv("MODEL_DIR", "models/distilBERT_finetuned")
 INFERENCE_DEVICE = os.getenv("INFERENCE_DEVICE", "cpu")
 ENFORCE_REAL_MODEL = os.getenv("ENFORCE_REAL_MODEL", "0") == "1"
 
 
-_distilbert_model = None
-_distilbert_tokenizer = None
+_model = None
+_tokenizer = None
 _real_inference_enabled = False
 _model_load_error: Optional[str] = None
 
@@ -95,7 +95,7 @@ def label_to_str(label: int) -> str:
 def placeholder_raw_predict(text: str) -> tuple[int, float]:
 	"""
 	Temporary deterministic predictor for API scaffolding.
-	Replace this with distilbert_predict_single(...) once model loading is wired.
+	Replace this with model_raw_predict(...) once model loading is wired.
 	Returns (raw_label, confidence_percent).
 	"""
 	normalized = text.strip().lower()
@@ -108,16 +108,16 @@ def placeholder_raw_predict(text: str) -> tuple[int, float]:
 	return raw_label, min(confidence, 99.99)
 
 
-def load_distilbert_if_available() -> None:
+def load_model_if_available() -> None:
 	"""
-	Load DistilBERT model/tokenizer if local files are available.
+	Load transformer model/tokenizer if local files are available.
 	Keeps the API operational with placeholder inference for development
 	unless ENFORCE_REAL_MODEL=1.
 	"""
-	global _distilbert_model, _distilbert_tokenizer, _real_inference_enabled, _model_load_error
+	global _model, _tokenizer, _real_inference_enabled, _model_load_error
 
-	if not os.path.isdir(DISTILBERT_MODEL_DIR):
-		_model_load_error = f"Model directory not found: {DISTILBERT_MODEL_DIR}"
+	if not os.path.isdir(MODEL_DIR):
+		_model_load_error = f"Model directory not found: {MODEL_DIR}"
 		if ENFORCE_REAL_MODEL:
 			raise RuntimeError(_model_load_error)
 		return
@@ -126,15 +126,15 @@ def load_distilbert_if_available() -> None:
 		import torch
 		from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-		tokenizer = AutoTokenizer.from_pretrained(DISTILBERT_MODEL_DIR)
+		tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
 		model = AutoModelForSequenceClassification.from_pretrained(
-			DISTILBERT_MODEL_DIR,
+			MODEL_DIR,
 			use_safetensors=True,
 		)
 		model.to(INFERENCE_DEVICE).eval()
 
-		_distilbert_tokenizer = tokenizer
-		_distilbert_model = model
+		_tokenizer = tokenizer
+		_model = model
 		_real_inference_enabled = True
 		_model_load_error = None
 	except Exception as exc:
@@ -144,17 +144,17 @@ def load_distilbert_if_available() -> None:
 			raise RuntimeError(f"Failed to load real model: {exc}") from exc
 
 
-def distilbert_raw_predict(text: str) -> tuple[int, float]:
+def model_raw_predict(text: str) -> tuple[int, float]:
 	"""
-	Run real DistilBERT inference and return (raw_label, confidence_percent).
+	Run real model inference and return (raw_label, confidence_percent).
 	Raw label orientation depends on checkpoint and is normalized later.
 	"""
-	if not _real_inference_enabled or _distilbert_model is None or _distilbert_tokenizer is None:
-		raise RuntimeError("Real DistilBERT model is not loaded")
+	if not _real_inference_enabled or _model is None or _tokenizer is None:
+		raise RuntimeError("Real model is not loaded")
 
 	import torch
 
-	inputs = _distilbert_tokenizer(
+	inputs = _tokenizer(
 		text,
 		return_tensors="pt",
 		truncation=True,
@@ -162,7 +162,7 @@ def distilbert_raw_predict(text: str) -> tuple[int, float]:
 	).to(INFERENCE_DEVICE)
 
 	with torch.no_grad():
-		logits = _distilbert_model(**inputs).logits
+		logits = _model(**inputs).logits
 
 	probs = torch.softmax(logits, dim=-1)[0]
 	raw_label = int(probs.argmax().item())
@@ -172,7 +172,7 @@ def distilbert_raw_predict(text: str) -> tuple[int, float]:
 
 @app.on_event("startup")
 def initialize_model() -> None:
-	load_distilbert_if_available()
+	load_model_if_available()
 
 
 @app.get("/health")
@@ -182,7 +182,7 @@ def health() -> dict:
 		"model_version": MODEL_VERSION,
 		"raw_label_for_truthful": RAW_LABEL_FOR_TRUTHFUL,
 		"real_inference_enabled": _real_inference_enabled,
-		"model_dir": DISTILBERT_MODEL_DIR,
+		"model_dir": MODEL_DIR,
 		"device": INFERENCE_DEVICE,
 		"model_load_error": _model_load_error,
 	}
@@ -213,7 +213,7 @@ def predict(payload: PredictRequest) -> PredictResponse:
 
 	try:
 		if _real_inference_enabled:
-			raw_label, confidence = distilbert_raw_predict(text)
+			raw_label, confidence = model_raw_predict(text)
 		else:
 			raw_label, confidence = placeholder_raw_predict(text)
 		label = normalize_raw_label(raw_label)
