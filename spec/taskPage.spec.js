@@ -171,6 +171,23 @@ describe("task page", function () {
     expect(document.getElementById("app").textContent).toContain("previous modification has been prefilled");
   });
 
+  it("warns when submitting the unchanged prefilled previous modification", async function () {
+    spyOn(modelService, "getPrediction").and.returnValue({ label: 1, labelStr: "truthful", confidence: 80.0 });
+    const firstRewrite = "I took the train to Rotterdam and met a friend by the river, then we had coffee downtown.";
+    document.getElementById("taskRewriteInput").value = firstRewrite;
+
+    await app.handleTaskSubmit();
+
+    document.getElementById("taskRewriteInput").value = firstRewrite;
+    await app.handleTaskSubmit();
+
+    expect(document.getElementById("app").textContent).toContain(
+      "Please change your previous modification before submitting again."
+    );
+    expect(state.taskSession.attemptsUsed).toBe(1);
+    expect(state.taskSession.draftText).toBe(firstRewrite);
+  });
+
   it("starts attempt one with an empty textarea and no prefill note", function () {
     expect(state.taskSession.attemptsUsed).toBe(0);
     expect(document.getElementById("taskRewriteInput").value).toBe("");

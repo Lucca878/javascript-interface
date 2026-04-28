@@ -729,6 +729,15 @@ window.app = {
       return;
     }
 
+    if (taskSession.attemptsUsed > 0 && rewriteText === taskSession.lastRewrite) {
+      taskSession.draftText = rewriteText;
+      taskSession.statusMessage = "Please change your previous modification before submitting again.";
+      taskSession.statusType = "warning";
+      storage.setTaskSession(taskSession);
+      renderTaskPage(this);
+      return;
+    }
+
     const originalWordCount = this.countWords(taskSession.originalText);
     const rewriteWordCount = this.countWords(rewriteText);
 
