@@ -20,6 +20,7 @@ window.createSessionData = function() {
     sessionStartTime: new Date().toISOString(),
     sessionEndTime: null,
     sessionDataPosted: false,
+    pageFocusSwitchCount: 0,
     pages: {
       consent: { enterTime: null, exitTime: null, duration: null, decision: null },
       instructions: { enterTime: null, exitTime: null, duration: null },

@@ -8,6 +8,7 @@ SELECT
   csv_row_json->>'session_start' AS session_start,
   csv_row_json->>'session_end' AS session_end,
   csv_row_json->>'total_duration_ms' AS total_duration_ms,
+  csv_row_json->>'page_focus_switch_count' AS page_focus_switch_count,
   csv_row_json->>'welcome_duration_ms' AS welcome_duration_ms,
   csv_row_json->>'consent_decision' AS consent_decision,
   csv_row_json->>'consent_duration_ms' AS consent_duration_ms,

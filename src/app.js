@@ -48,6 +48,11 @@ window.app = {
       storedSessionData.pages
     ) {
       state.sessionData = storedSessionData;
+
+      if (!Number.isFinite(state.sessionData.pageFocusSwitchCount)) {
+        state.sessionData.pageFocusSwitchCount = 0;
+        storage.setSessionData(state.sessionData);
+      }
     }
   },
 
@@ -119,6 +124,17 @@ window.app = {
       // Only warn during active study screens, not on terminal pages.
       const screensToWarn = ["instructions", "attentionCheck", "taskReminder", "task", "feedback"];
       if (screensToWarn.includes(currentScreen)) {
+        if (!Number.isFinite(state.sessionData.pageFocusSwitchCount)) {
+          state.sessionData.pageFocusSwitchCount = 0;
+        }
+        state.sessionData.pageFocusSwitchCount += 1;
+
+        if (typeof window.persistSessionData === "function") {
+          window.persistSessionData();
+        } else {
+          storage.setSessionData(state.sessionData);
+        }
+
         window.alert(
           "You switched away from the study tab. Please do not use AI tools or external resources to complete the task."
         );

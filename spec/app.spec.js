@@ -310,8 +310,22 @@ describe("app core", function () {
     );
   });
 
+  it("increments and persists page focus switch count on tab switch warnings", function () {
+    spyOn(window, "alert");
+    storage.setCurrentScreen("task");
+
+    state.sessionData.pageFocusSwitchCount = 0;
+    spyOnProperty(document, "visibilityState", "get").and.returnValue("hidden");
+
+    app.handleVisibilityChange();
+
+    expect(state.sessionData.pageFocusSwitchCount).toBe(1);
+    expect(storage.getSessionData().pageFocusSwitchCount).toBe(1);
+  });
+
   it("does not show a tab-switch warning on terminal screens (welcome, end)", function () {
     spyOn(window, "alert");
+    state.sessionData.pageFocusSwitchCount = 0;
 
     spyOnProperty(document, "visibilityState", "get").and.returnValue("hidden");
 
@@ -325,6 +339,7 @@ describe("app core", function () {
     app.handleVisibilityChange();
 
     expect(window.alert).not.toHaveBeenCalled();
+    expect(state.sessionData.pageFocusSwitchCount).toBe(0);
   });
 
   it("does not show a tab-switch warning when the tab becomes visible again", function () {

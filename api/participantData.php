@@ -152,6 +152,7 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 		'session_start' => scalarToString($payload['sessionStartTime'] ?? ''),
 		'session_end' => scalarToString($payload['sessionEndTime'] ?? ''),
 		'total_duration_ms' => scalarToString($payload['totalDuration'] ?? ''),
+		'page_focus_switch_count' => scalarToString($payload['pageFocusSwitchCount'] ?? ''),
 		'consent_decision' => scalarToString(getNested($payload, ['pages', 'consent', 'decision'], '')),
 		'statement_id' => scalarToString($statement['statementId'] ?? ''),
 		'original_text' => scalarToString($statement['originalText'] ?? ''),
