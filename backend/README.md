@@ -37,10 +37,10 @@ Successful response example:
 ```json
 {
   "status": "ok",
-  "model_version": "distilbert-v1",
+  "model_version": "modernbert-v1",
   "raw_label_for_truthful": 0,
   "real_inference_enabled": true,
-  "model_dir": "models/distilBERT_finetuned",
+  "model_dir": "models/modernbert_trained",
   "device": "cpu",
   "model_load_error": null
 }
@@ -80,11 +80,11 @@ curl -sS -X POST http://127.0.0.1:8080/predict \
 
 ## Model Loading
 
-Startup tries to load DistilBERT from `DISTILBERT_MODEL_DIR`.
+Startup tries to load a local checkpoint from `MODEL_DIR`.
 
 Defaults:
 
-- `DISTILBERT_MODEL_DIR=models/distilBERT_finetuned`
+- `MODEL_DIR=models/distilBERT_finetuned`
 - `INFERENCE_DEVICE=cpu`
 - `ENFORCE_REAL_MODEL=0`
 - `RAW_LABEL_FOR_TRUTHFUL=0`
@@ -178,6 +178,9 @@ docker run -d \
   --name model-backend \
   --restart unless-stopped \
   -e PORT=8000 \
+  -e MODEL_DIR=models/modernbert_trained \
+  -e MODEL_VERSION=modernbert-v1 \
+  -e RAW_LABEL_FOR_TRUTHFUL=0 \
   -p 127.0.0.1:8000:8000 \
   model-backend:hetzner
 ```
@@ -219,7 +222,7 @@ ssh root@157.90.127.76
 cd /var/www/study/backend
 docker build -t model-backend:hetzner .
 docker rm -f model-backend
-docker run -d --name model-backend --restart unless-stopped -e PORT=8000 -p 127.0.0.1:8000:8000 model-backend:hetzner
+docker run -d --name model-backend --restart unless-stopped -e PORT=8000 -e MODEL_DIR=models/modernbert_trained -e MODEL_VERSION=modernbert-v1 -e RAW_LABEL_FOR_TRUTHFUL=0 -p 127.0.0.1:8000:8000 model-backend:hetzner
 ```
 
 ## Common Operations

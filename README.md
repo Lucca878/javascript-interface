@@ -680,7 +680,13 @@ nginx -v
 
 ## 2) Ensure model files exist on server
 
-Expected backend model path:
+Expected backend model path (current production):
+
+```text
+/var/www/study/backend/models/modernbert_trained
+```
+
+Alternative rollback path:
 
 ```text
 /var/www/study/backend/models/distilBERT_finetuned
@@ -709,6 +715,9 @@ docker run -d \
   --name model-backend \
   --restart unless-stopped \
   -e PORT=8000 \
+  -e MODEL_DIR=models/modernbert_trained \
+  -e MODEL_VERSION=modernbert-v1 \
+  -e RAW_LABEL_FOR_TRUTHFUL=0 \
   -p 127.0.0.1:8000:8000 \
   model-backend:hetzner
 ```
@@ -819,7 +828,7 @@ docker restart model-backend
 cd /var/www/study/backend
 docker build -t model-backend:hetzner .
 docker rm -f model-backend
-docker run -d --name model-backend --restart unless-stopped -e PORT=8000 -p 127.0.0.1:8000:8000 model-backend:hetzner
+docker run -d --name model-backend --restart unless-stopped -e PORT=8000 -e MODEL_DIR=models/modernbert_trained -e MODEL_VERSION=modernbert-v1 -e RAW_LABEL_FOR_TRUTHFUL=0 -p 127.0.0.1:8000:8000 model-backend:hetzner
 
 # Nginx checks
 nginx -t
@@ -832,7 +841,7 @@ systemctl reload nginx
   - Cert for `api.lpstudies.net` missing. Run `certbot --nginx -d api.lpstudies.net --redirect`.
 - Health says `real_inference_enabled: false`:
   - Model files missing or wrong path in container.
-  - Verify `/var/www/study/backend/models/distilBERT_finetuned` and rebuild image.
+  - Verify the path configured by `MODEL_DIR` (for current production: `/var/www/study/backend/models/modernbert_trained`) and rebuild image.
 - Frontend still calls Cloud Run unexpectedly:
   - Check `index.html` for `activeModelBackend` value.
   - Ensure latest code is deployed on server (`git pull`).
