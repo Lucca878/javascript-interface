@@ -25,13 +25,13 @@ window.renderEndPage = function renderEndPage(app) {
     </div>
 
     <div class="actions">
-      <a href="https://app.prolific.com/submissions/complete?cc=CPSXYUWC" class="button" target="_blank">
+      <a href="https://app.prolific.com/submissions/complete?cc=CQSYNLHC" class="button" target="_blank">
         Return to Prolific
       </a>
     </div>
 
     <p class="note" style="text-align: center; margin-top: 2rem; font-size: 0.9rem;">
-      If you're not automatically redirected, <a href="https://app.prolific.com/submissions/complete?cc=CPSXYUWC" target="_blank">click here</a>.
+      If you're not automatically redirected, <a href="https://app.prolific.com/submissions/complete?cc=CQSYNLHC" target="_blank">click here</a>.
     </p>
   `;
 };
