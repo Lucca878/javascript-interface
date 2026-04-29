@@ -27,7 +27,7 @@ describe("end page", function () {
     );
 
     expect(prolificButton).not.toBeNull();
-    expect(prolificButton.href).toContain("https://app.prolific.com/submissions/complete?cc=CPSXYUWC");
+    expect(prolificButton.href).toContain("https://app.prolific.com/submissions/complete?cc=CQSYNLHC");
     expect(prolificButton.target).toBe("_blank");
   });
 
@@ -37,7 +37,7 @@ describe("end page", function () {
     );
 
     expect(backupLink).not.toBeNull();
-    expect(backupLink.href).toContain("https://app.prolific.com/submissions/complete?cc=CPSXYUWC");
+    expect(backupLink.href).toContain("https://app.prolific.com/submissions/complete?cc=CQSYNLHC");
   });
 
   it("stores the current screen as 'end' when rendered", function () {
