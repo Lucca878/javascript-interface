@@ -224,11 +224,11 @@ body {
 }
 
 .task-reminder-panel-do .task-panel-title {
-  color: #166534;
+  color: var(--text);
 }
 
 .task-reminder-panel-do strong {
-  color: #14532d;
+  color: var(--text);
 }
 
 .task-reminder-panel-dont {
@@ -237,11 +237,11 @@ body {
 }
 
 .task-reminder-panel-dont .task-panel-title {
-  color: #b42318;
+  color: var(--text);
 }
 
 .task-reminder-panel-dont strong {
-  color: #912018;
+  color: var(--text);
 }
 
 .task-reminder-list {
