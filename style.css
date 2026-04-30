@@ -219,13 +219,29 @@ body {
 }
 
 .task-reminder-panel-do {
-  background: #f7fbff;
-  border-color: #cfe0ff;
+  background: #f0fbf4;
+  border-color: #9dd9b0;
+}
+
+.task-reminder-panel-do .task-panel-title {
+  color: #166534;
+}
+
+.task-reminder-panel-do strong {
+  color: #14532d;
 }
 
 .task-reminder-panel-dont {
-  background: #fff9f0;
-  border-color: #f3cf87;
+  background: #fff3f2;
+  border-color: #f7b5b0;
+}
+
+.task-reminder-panel-dont .task-panel-title {
+  color: #b42318;
+}
+
+.task-reminder-panel-dont strong {
+  color: #912018;
 }
 
 .task-reminder-list {
