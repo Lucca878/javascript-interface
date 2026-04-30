@@ -27,6 +27,17 @@ describe("task page", function () {
     expect(document.getElementById("app").textContent).toContain("Main Task");
     expect(document.getElementById("taskSubmitButton")).not.toBeNull();
     expect(document.getElementById("app").textContent).toContain("Rotterdam");
+    expect(document.getElementById("taskWordCountHint").textContent).toContain("Word count:");
+  });
+
+  it("updates the live word counter as the participant types", function () {
+    const rewriteInput = document.getElementById("taskRewriteInput");
+    const wordCountHint = document.getElementById("taskWordCountHint");
+
+    rewriteInput.value = "I rewrote this statement while keeping the meaning.";
+    rewriteInput.dispatchEvent(new Event("input"));
+
+    expect(wordCountHint.textContent).toContain("Word count: 8");
   });
 
   it("shows a validation message when the rewrite is empty", function () {

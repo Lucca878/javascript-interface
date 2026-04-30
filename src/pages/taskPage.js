@@ -5,6 +5,8 @@ window.renderTaskPage = function renderTaskPage(app) {
   const taskSession = state.taskSession;
   const targetLabel = taskSession.originalPrediction.label === 1 ? "deceptive" : "truthful";
   const originalWordCount = app.countWords(taskSession.originalText);
+  const minAllowedWords = Math.max(0, originalWordCount - 20);
+  const maxAllowedWords = originalWordCount + 20;
   const rewriteHistory = Array.isArray(taskSession.rewriteHistory) ? taskSession.rewriteHistory : [];
   const previousAttempts = rewriteHistory.slice(0, -1);
   const latestPredictionMarkup = taskSession.latestPrediction
@@ -85,6 +87,8 @@ window.renderTaskPage = function renderTaskPage(app) {
       rows="8"
     >${utils.escapeHtml(rewriteInputValue)}</textarea>
 
+    <p class="task-summary" id="taskWordCountHint" aria-live="polite"></p>
+
     ${prefillNoteMarkup}
 
     <div class="task-meta">
@@ -151,11 +155,23 @@ window.renderTaskPage = function renderTaskPage(app) {
       .getElementById("taskSubmitButton")
       .addEventListener("click", () => app.handleTaskSubmit());
 
+    const rewriteInput = document.getElementById("taskRewriteInput");
+    const wordCountHint = document.getElementById("taskWordCountHint");
+    const updateWordCountHint = () => {
+      const currentWordCount = app.countWords(rewriteInput.value);
+      const inRange = currentWordCount >= minAllowedWords && currentWordCount <= maxAllowedWords;
+      wordCountHint.textContent = `Word count: ${currentWordCount} (allowed: ${minAllowedWords}-${maxAllowedWords})`;
+      wordCountHint.style.color = inRange ? "" : "#b42318";
+    };
+
+    updateWordCountHint();
+
     document
       .getElementById("taskRewriteInput")
       .addEventListener("input", (event) => {
         taskSession.draftText = event.target.value;
         storage.setTaskSession(taskSession);
+        updateWordCountHint();
       });
   }
 
