@@ -141,7 +141,7 @@ window.renderFeedbackPage = function renderFeedbackPage(app) {
     </div>
 
     <label class="task-label" for="strategiesInput">
-      <strong>4. How did you modify the statement so the AI would change its initial prediction?</strong>
+      <strong>4. What strategy did you use so the AI would change its initial prediction?</strong>
     </label>
 
     ${recapMarkup}
