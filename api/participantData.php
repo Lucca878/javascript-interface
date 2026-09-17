@@ -12,6 +12,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 const DEFAULT_GCS_BUCKET = 'paraphrasing-attacks-data-euw4';
 const CSV_MAX_ATTEMPTS   = 10;
+const DEFAULT_STUDY_RUN_ID = 'collection-2026-09-17';
 
 function getEnvString(string $key, string $default = ''): string
 {
@@ -57,6 +58,11 @@ function getGcsBucketName(): string
 function getGcsCredentialsPath(): string
 {
 	return getEnvString('GCS_CREDENTIALS_PATH', __DIR__ . '/../gcs-credentials.json');
+}
+
+function getStudyRunId(): string
+{
+	return getEnvString('STUDY_RUN_ID', DEFAULT_STUDY_RUN_ID);
 }
 
 function getPdoConnection(): PDO
@@ -147,6 +153,7 @@ function buildSessionCsvRow(array $payload, string $receivedAt): array
 		: ((((int) scalarToString($allCorrectRaw)) === 1 && $q3IsCorrect === '1') ? '1' : '0');
 
 	$row = [
+		'study_run_id' => scalarToString($payload['studyRunId'] ?? ''),
 		'session_id' => scalarToString($payload['sessionId'] ?? ''),
 		'prolific_id' => scalarToString($payload['prolificId'] ?? ''),
 		'session_start' => scalarToString($payload['sessionStartTime'] ?? ''),
@@ -228,12 +235,13 @@ function persistToPostgres(
 
 	$insert = $pdo->prepare(
 		'INSERT INTO results
-			(session_id, prolific_id, received_at, json_object_name, csv_object_name, payload_json, csv_row_json)
+			(study_run_id, session_id, prolific_id, received_at, json_object_name, csv_object_name, payload_json, csv_row_json)
 		 VALUES
-			(:session_id, :prolific_id, CAST(:received_at AS timestamptz), :json_object_name, :csv_object_name, CAST(:payload_json AS jsonb), CAST(:csv_row_json AS jsonb))
+			(:study_run_id, :session_id, :prolific_id, CAST(:received_at AS timestamptz), :json_object_name, :csv_object_name, CAST(:payload_json AS jsonb), CAST(:csv_row_json AS jsonb))
 		 ON CONFLICT (session_id) DO NOTHING'
 	);
 
+	$insert->bindValue(':study_run_id', (string) $payload['studyRunId']);
 	$insert->bindValue(':session_id', $sessionId);
 	$insert->bindValue(':prolific_id', $prolificId);
 	$insert->bindValue(':received_at', $receivedAt);
@@ -354,6 +362,8 @@ if ($sessionId === '' || $prolificId === '') {
 	]);
 	exit;
 }
+
+$payload['studyRunId'] = getStudyRunId();
 
 $safeSessionId  = preg_replace('/[^a-zA-Z0-9_-]/', '_', $sessionId);
 $safeProlificId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $prolificId);

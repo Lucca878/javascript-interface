@@ -3,6 +3,7 @@
 
 CREATE OR REPLACE VIEW results_csv AS
 SELECT
+  study_run_id,
   csv_row_json->>'session_id' AS session_id,
   csv_row_json->>'prolific_id' AS prolific_id,
   csv_row_json->>'session_start' AS session_start,

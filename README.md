@@ -368,6 +368,24 @@ GCloud object naming remains unchanged for compatibility:
 
 Deduplication is enforced by SQL unique key on `session_id`.
 
+## Collection Runs
+
+New submissions are tagged server-side with `study_run_id = collection-2026-09-17`.
+All existing rows retain `study_run_id = legacy`. This makes the current collection run directly filterable without changing historical data.
+
+Apply the schema and export-view updates before deploying the new PHP ingestion handler:
+
+```bash
+sudo -u postgres psql -d study -f /var/www/study/api/sql/postgres_schema.sql
+sudo -u postgres psql -d study -f /var/www/study/api/sql/results_csv_view.sql
+```
+
+To export only this run:
+
+```bash
+sudo -u postgres psql -d study -c "\copy (SELECT * FROM results_csv WHERE study_run_id = 'collection-2026-09-17' ORDER BY received_at) TO STDOUT WITH CSV HEADER"
+```
+
 ## Data Retrieval (PostgreSQL on Hetzner)
 
 All participant data is stored in the `results` table in the `study` PostgreSQL database on the Hetzner VPS.

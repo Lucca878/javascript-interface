@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS results (
   id BIGSERIAL PRIMARY KEY,
   session_id TEXT NOT NULL UNIQUE,
   prolific_id TEXT NOT NULL,
+  study_run_id TEXT NOT NULL DEFAULT 'legacy',
   received_at TIMESTAMPTZ NOT NULL,
   json_object_name TEXT NOT NULL,
   csv_object_name TEXT NOT NULL,
@@ -13,11 +14,17 @@ CREATE TABLE IF NOT EXISTS results (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE results
+  ADD COLUMN IF NOT EXISTS study_run_id TEXT NOT NULL DEFAULT 'legacy';
+
 CREATE INDEX IF NOT EXISTS idx_results_prolific_id
   ON results (prolific_id);
 
 CREATE INDEX IF NOT EXISTS idx_results_received_at
   ON results (received_at);
+
+CREATE INDEX IF NOT EXISTS idx_results_study_run_id
+  ON results (study_run_id);
 
 CREATE INDEX IF NOT EXISTS idx_results_payload_json_gin
   ON results USING GIN (payload_json);
