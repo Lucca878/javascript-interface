@@ -3,7 +3,6 @@
 
 CREATE OR REPLACE VIEW results_csv AS
 SELECT
-  study_run_id,
   csv_row_json->>'session_id' AS session_id,
   csv_row_json->>'prolific_id' AS prolific_id,
   csv_row_json->>'session_start' AS session_start,
@@ -75,5 +74,6 @@ SELECT
   csv_row_json->>'attention_check_num_correct' AS attention_check_num_correct,
   csv_row_json->>'attention_check_all_correct' AS attention_check_all_correct,
   csv_row_json->>'attention_check_duration_ms' AS attention_check_duration_ms,
-  csv_row_json->>'received_at' AS received_at
+  csv_row_json->>'received_at' AS received_at,
+  study_run_id
 FROM results;
