@@ -455,6 +455,9 @@ ssh root@157.90.127.76 "sudo -u postgres psql -d study -f /var/www/study/api/sql
 # Preferred short CSV export (uses results_csv view with header row)
 ssh root@157.90.127.76 "sudo -u postgres psql -d study -c \"\\copy (SELECT * FROM results_csv ORDER BY received_at) TO STDOUT WITH CSV HEADER\"" > ~/Desktop/all_sessions.csv
 
+# Export only the current collection run
+ssh root@157.90.127.76 "sudo -u postgres psql -d study -c \"\\copy (SELECT * FROM results_csv WHERE study_run_id = 'collection-2026-09-17' ORDER BY received_at) TO STDOUT WITH CSV HEADER\"" > ~/Desktop/collection_2026_09_17_sessions.csv
+
 # Timing-focused CSV export (durations only)
 ssh root@157.90.127.76 "sudo -u postgres psql -d study -c \"\\copy (SELECT session_id, prolific_id, total_duration_ms, welcome_duration_ms, consent_duration_ms, instructions_duration_ms, attention_check_duration_ms, task_reminder_duration_ms, feedback_duration_ms, rewrite1_duration_ms, rewrite2_duration_ms, rewrite3_duration_ms, rewrite4_duration_ms, rewrite5_duration_ms, rewrite6_duration_ms, rewrite7_duration_ms, rewrite8_duration_ms, rewrite9_duration_ms, rewrite10_duration_ms, received_at FROM results_csv ORDER BY received_at) TO STDOUT WITH CSV HEADER\"" > ~/Desktop/all_sessions_timing.csv
 
