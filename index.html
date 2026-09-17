@@ -14,11 +14,7 @@
   </main>
 
   <script>
-    const runningLocally = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
-    const defaultCorpusEndpoint =
-      runningLocally && window.location.port !== "8000"
-        ? "http://127.0.0.1:8000/api/statements.php"
-        : "api/statements.php";
+    const defaultCorpusEndpoint = "data/hippocorpus_test_truncated_80_100.csv";
 
     const defaultModelEndpoint = "https://model-backend-302671925464.europe-west4.run.app/predict";
     const hetznerModelEndpoint = "https://api.lpstudies.net/predict";
@@ -29,7 +25,7 @@
         : "api/participantData.php";
 
     window.APP_CONFIG = {
-      // Example: "api/statements.php" or "/backend/get_statements.php"
+      // Example: "data/hippocorpus_test_truncated_80_100.csv" or "/backend/get_statements.php"
       corpusPhpEndpoint: defaultCorpusEndpoint,
       // Legacy single-endpoint config (still supported by modelService)
       modelApiEndpoint: defaultModelEndpoint,
