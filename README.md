@@ -21,7 +21,7 @@ Frontend deploy to Hetzner:
 
 ```bash
 ssh root@157.90.127.76
-cd /var/www/study
+cd /var/www/study1
 git pull
 composer install --no-dev
 systemctl reload nginx
@@ -187,7 +187,7 @@ Clone repository:
 mkdir -p /var/www
 cd /var/www
 git clone <YOUR_REPO_URL> study
-cd /var/www/study
+cd /var/www/study1
 composer install --no-dev
 ```
 
@@ -199,7 +199,7 @@ server {
   listen [::]:80;
   server_name lpstudies.net www.lpstudies.net;
 
-  root /var/www/study;
+  root /var/www/study1;
   index index.html;
 
   location / {
@@ -224,12 +224,12 @@ nginx -t && systemctl reload nginx
 Set permissions for writable paths:
 
 ```bash
-chown -R www-data:www-data /var/www/study
-find /var/www/study -type d -exec chmod 755 {} \;
-find /var/www/study -type f -exec chmod 644 {} \;
-mkdir -p /var/www/study/data/sessions /var/www/study/data/exports
-chown -R www-data:www-data /var/www/study/data/sessions /var/www/study/data/exports
-chmod -R 775 /var/www/study/data/sessions /var/www/study/data/exports
+chown -R www-data:www-data /var/www/study1
+find /var/www/study1 -type d -exec chmod 755 {} \;
+find /var/www/study1 -type f -exec chmod 644 {} \;
+mkdir -p /var/www/study1/data/sessions /var/www/study1/data/exports
+chown -R www-data:www-data /var/www/study1/data/sessions /var/www/study1/data/exports
+chmod -R 775 /var/www/study1/data/sessions /var/www/study1/data/exports
 ```
 
 Issue SSL for frontend domain:
@@ -253,7 +253,7 @@ Then on Hetzner server pull and reload:
 
 ```bash
 ssh root@157.90.127.76
-cd /var/www/study
+cd /var/www/study1
 git status
 git branch
 git pull
@@ -290,7 +290,7 @@ If latest deploy breaks frontend:
 
 ```bash
 ssh root@157.90.127.76
-cd /var/www/study
+cd /var/www/study1
 git log --oneline -n 5
 git checkout <LAST_KNOWN_GOOD_COMMIT>
 composer install --no-dev
@@ -352,13 +352,13 @@ export POSTGRES_PASSWORD='<STRONG_PASSWORD>'
 export POSTGRES_SSLMODE=prefer
 
 export GCS_BUCKET=paraphrasing-attacks-data-euw4
-export GCS_CREDENTIALS_PATH=/var/www/study/gcs-credentials.json
+export GCS_CREDENTIALS_PATH=/var/www/study1/gcs-credentials.json
 ```
 
 Create schema once:
 
 ```bash
-sudo -u postgres psql -d study -f /var/www/study/api/sql/postgres_schema.sql
+sudo -u postgres psql -d study -f /var/www/study1/api/sql/postgres_schema.sql
 ```
 
 GCloud object naming remains unchanged for compatibility:
@@ -376,8 +376,8 @@ All existing rows retain `study_run_id = legacy`. This makes the current collect
 Apply the schema and export-view updates before deploying the new PHP ingestion handler:
 
 ```bash
-sudo -u postgres psql -d study -f /var/www/study/api/sql/postgres_schema.sql
-sudo -u postgres psql -d study -f /var/www/study/api/sql/results_csv_view.sql
+sudo -u postgres psql -d study -f /var/www/study1/api/sql/postgres_schema.sql
+sudo -u postgres psql -d study -f /var/www/study1/api/sql/results_csv_view.sql
 ```
 
 To export only this run:
@@ -450,7 +450,7 @@ Run these from your **local terminal** (not on the server):
 
 ```bash
 # One-time setup on server (creates the results_csv view for short exports)
-ssh root@157.90.127.76 "sudo -u postgres psql -d study -f /var/www/study/api/sql/results_csv_view.sql"
+ssh root@157.90.127.76 "sudo -u postgres psql -d study -f /var/www/study1/api/sql/results_csv_view.sql"
 
 # Preferred short CSV export (uses results_csv view with header row)
 ssh root@157.90.127.76 "sudo -u postgres psql -d study -c \"\\copy (SELECT * FROM results_csv ORDER BY received_at) TO STDOUT WITH CSV HEADER\"" > ~/Desktop/all_sessions.csv
@@ -639,8 +639,8 @@ https://lpstudies.net?PROLIFIC_PID=test-e2e-001
 
 ```bash
 ssh root@157.90.127.76
-tail -n 5 /var/www/study/data/exports/sessions.csv
-ls -t /var/www/study/data/sessions | head -n 5
+tail -n 5 /var/www/study1/data/exports/sessions.csv
+ls -t /var/www/study1/data/sessions | head -n 5
 ```
 
 5. Confirm latest row contains expected values:
@@ -704,17 +704,17 @@ nginx -v
 Choose a model subdirectory under:
 
 ```text
-/var/www/study/backend/models/
+/var/www/study1/backend/models/
 ```
 
 Examples:
 
 ```text
-/var/www/study/backend/models/modernbert_trained
+/var/www/study1/backend/models/modernbert_trained
 ```
 
 ```text
-/var/www/study/backend/models/distilBERT_finetuned
+/var/www/study1/backend/models/distilBERT_finetuned
 ```
 
 Expected files:
@@ -734,14 +734,14 @@ MODEL_SUBDIR=modernbert_trained   # example; change as needed
 
 rsync -avh --progress \
   <LOCAL_REPO_PATH>/backend/models/${MODEL_SUBDIR}/ \
-  root@157.90.127.76:/var/www/study/backend/models/${MODEL_SUBDIR}/
+  root@157.90.127.76:/var/www/study1/backend/models/${MODEL_SUBDIR}/
 ```
 
 ## 3) Build and run container
 
 ```bash
 ssh root@157.90.127.76
-cd /var/www/study/backend
+cd /var/www/study1/backend
 
 MODEL_SUBDIR=modernbert_trained   # example; change as needed
 MODEL_VERSION_TAG=modernbert-v1   # example; change as needed
@@ -847,7 +847,7 @@ Useful commands on Hetzner:
 ssh root@157.90.127.76
 
 # App code
-cd /var/www/study
+cd /var/www/study1
 
 # Pull latest frontend/PHP code
 git pull
@@ -862,7 +862,7 @@ docker logs --tail=200 model-backend
 docker restart model-backend
 
 # Rebuild backend image after backend code change
-cd /var/www/study/backend
+cd /var/www/study1/backend
 MODEL_SUBDIR=modernbert_trained   # example; change as needed
 MODEL_VERSION_TAG=modernbert-v1   # example; change as needed
 docker build -t model-backend:hetzner .
@@ -880,7 +880,7 @@ systemctl reload nginx
   - Cert for `api.lpstudies.net` missing. Run `certbot --nginx -d api.lpstudies.net --redirect`.
 - Health says `real_inference_enabled: false`:
   - Model files missing or wrong path in container.
-  - Verify the path configured by `MODEL_DIR` exists under `/var/www/study/backend/models/`, then rebuild image.
+  - Verify the path configured by `MODEL_DIR` exists under `/var/www/study1/backend/models/`, then rebuild image.
 - Frontend still calls Cloud Run unexpectedly:
   - Check `index.html` for `activeModelBackend` value.
   - Ensure latest code is deployed on server (`git pull`).

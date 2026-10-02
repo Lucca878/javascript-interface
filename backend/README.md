@@ -175,14 +175,14 @@ MODEL_SUBDIR=modernbert_trained   # example; change as needed
 
 rsync -avh --progress \
   <LOCAL_REPO_PATH>/backend/models/${MODEL_SUBDIR}/ \
-  root@157.90.127.76:/var/www/study/backend/models/${MODEL_SUBDIR}/
+  root@157.90.127.76:/var/www/study1/backend/models/${MODEL_SUBDIR}/
 ```
 
 ## 1) First deploy (or after fresh server setup)
 
 ```bash
 ssh root@157.90.127.76
-cd /var/www/study/backend
+cd /var/www/study1/backend
 MODEL_SUBDIR=modernbert_trained   # example; change as needed
 MODEL_VERSION_TAG=modernbert-v1   # example; change as needed
 docker build -t model-backend:hetzner .
@@ -232,7 +232,7 @@ curl -sS -X POST https://api.lpstudies.net/predict \
 
 ```bash
 ssh root@157.90.127.76
-cd /var/www/study/backend
+cd /var/www/study1/backend
 MODEL_SUBDIR=modernbert_trained   # example; change as needed
 MODEL_VERSION_TAG=modernbert-v1   # example; change as needed
 docker build -t model-backend:hetzner .

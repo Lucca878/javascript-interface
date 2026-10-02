@@ -1,5 +1,5 @@
 -- View for convenient full CSV export from JSON-backed results rows.
--- Run with: sudo -u postgres psql -d study -f /var/www/study/api/sql/results_csv_view.sql
+-- Run with: sudo -u postgres psql -d study -f /var/www/study1/api/sql/results_csv_view.sql
 
 CREATE OR REPLACE VIEW results_csv AS
 SELECT
