@@ -29,5 +29,9 @@ backend/*.tgz
 data/sessions/
 data/exports/
 
-# GCS service account key - never commit
+# GCS service account key 
 gcs-credentials.json
+
+# Private documentation 
+README-private.md
+backend/README-private.md

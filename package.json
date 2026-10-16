@@ -11,9 +11,15 @@
     "type": "git",
     "url": "git+https://github.com/Lucca878/javascript-interface.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
+  "keywords": [
+    "deception-detection",
+    "paraphrasing",
+    "adversarial-attacks",
+    "nlp",
+    "human-subject-study"
+  ],
+  "author": "Lucca Pfruender",
+  "license": "CC-BY-4.0",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/Lucca878/javascript-interface/issues"
